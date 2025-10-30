@@ -2,8 +2,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import base64
+import os
 from google import genai
 from google.genai import types
+from google.genai.types import GenerateContentConfig, Part, Modality
 
 app = FastAPI(title="GOGWAN API")
 
@@ -16,9 +18,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Gemini API 키
-GEMINI_API_KEY = "AIzaSyD6_hNN5EyO_-OSmDrx3aFJzDwZ9xKMkTE"
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Vertex AI 클라이언트 (나노바나나 사용)
+# 환경 변수에서 JSON 읽기 (Railway용) 또는 로컬 파일 사용
+if os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'):
+    import json
+    import tempfile
+    # 환경 변수에서 JSON 읽어서 임시 파일 생성
+    creds_json = json.loads(os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'))
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as f:
+        json.dump(creds_json, f)
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = f.name
+else:
+    # 로컬 파일 사용
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(
+        os.path.dirname(__file__),
+        'gogwan-4902b9a702be.json'
+    )
+
+client = genai.Client(
+    vertexai=True,
+    project='gogwan',
+    location='global'
+)
 
 
 class IdPhotoRequest(BaseModel):
@@ -58,16 +79,15 @@ async def create_id_photo(request: IdPhotoRequest):
 
 Create a high-quality ID photo suitable for passports or identification documents."""
 
-        # Gemini 2.5 Flash Image로 이미지 생성
+        # Gemini 2.5 Flash Image (나노바나나)로 이미지 생성
         response = client.models.generate_content(
             model="gemini-2.5-flash-image",
             contents=[
                 prompt,
-                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+                Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
             ],
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"],
-                image_config=types.ImageConfig(aspect_ratio="3:4")
+            config=GenerateContentConfig(
+                response_modalities=[Modality.TEXT, Modality.IMAGE]
             )
         )
 
@@ -83,6 +103,8 @@ Create a high-quality ID photo suitable for passports or identification document
 
         raise HTTPException(status_code=500, detail="이미지 생성에 실패했습니다")
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"처리 중 오류 발생: {str(e)}")
 
@@ -108,10 +130,10 @@ Keep the original composition and pose, but make it look exactly like a scene fr
             model="gemini-2.5-flash-image",
             contents=[
                 prompt,
-                types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
+                Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
             ],
-            config=types.GenerateContentConfig(
-                response_modalities=["IMAGE"]
+            config=GenerateContentConfig(
+                response_modalities=[Modality.TEXT, Modality.IMAGE]
             )
         )
 
