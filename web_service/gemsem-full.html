@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemSem - AI 교육 콘텐츠 제작 시스템 (Full Version)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-sm font-medium;
+        }
+        .status-uploaded { @apply bg-blue-100 text-blue-800; }
+        .status-processing { @apply bg-yellow-100 text-yellow-800; }
+        .status-completed { @apply bg-green-100 text-green-800; }
+        .status-failed { @apply bg-red-100 text-red-800; }
+
+        .concept-card, .problem-card {
+            @apply border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow;
+        }
+        .concept-verified, .problem-verified {
+            @apply border-green-300 bg-green-50;
+        }
+        .concept-unverified, .problem-unverified {
+            @apply border-gray-200 bg-white;
+        }
+
+        .source-original {
+            @apply bg-yellow-50 border-yellow-200;
+        }
+        .source-ai {
+            @apply bg-green-50 border-green-200;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            overflow: auto;
+        }
+        .modal.active {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            position: relative;
+            margin: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">GemSem</h1>
+                    <p class="text-gray-600 mt-1">AI 교육 콘텐츠 제작 시스템 (Full MVP)</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="showUploadModal('textbook')" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        📚 교과서 업로드
+                    </button>
+                    <button onclick="showUploadModal('workbook')" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
+                        📝 문제집 업로드
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tabs -->
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="-mb-px flex space-x-8">
+                <button onclick="switchTab('textbooks')" id="tab-textbooks" class="tab-button border-b-2 border-indigo-500 text-indigo-600 py-4 px-1 text-sm font-medium">
+                    교과서 목록
+                </button>
+                <button onclick="switchTab('concepts')" id="tab-concepts" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                    개념 관리
+                </button>
+                <button onclick="switchTab('workbooks')" id="tab-workbooks" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                    문제집 목록
+                </button>
+                <button onclick="switchTab('problems')" id="tab-problems" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                    문제 관리
+                </button>
+            </nav>
+        </div>
+
+        <!-- Textbooks Tab -->
+        <div id="panel-textbooks" class="tab-panel">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">업로드된 교과서</h2>
+                </div>
+                <div id="textbooks-list" class="divide-y divide-gray-200">
+                    <!-- Textbooks will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Concepts Tab -->
+        <div id="panel-concepts" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">전체 개념</h2>
+                            <p class="text-sm text-gray-600 mt-1">모든 교과서에서 추출된 개념을 확인하세요</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <select id="concepts-subject-filter" onchange="loadAllConcepts()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <option value="">전체 과목</option>
+                                <option value="수학">수학</option>
+                                <option value="영어">영어</option>
+                                <option value="과학">과학</option>
+                                <option value="국어">국어</option>
+                                <option value="사회">사회</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="concepts-list" class="p-6">
+                    <div class="text-center text-gray-500 py-8">
+                        로딩 중...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workbooks Tab -->
+        <div id="panel-workbooks" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">업로드된 문제집</h2>
+                </div>
+                <div id="workbooks-list" class="divide-y divide-gray-200">
+                    <!-- Workbooks will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Problems Tab -->
+        <div id="panel-problems" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900">문제 유형 관리</h2>
+                            <p class="text-sm text-gray-600 mt-1">원형 문제와 파생 문제를 확인하세요</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <select id="problems-subject-filter" onchange="loadProblemTemplates()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <option value="">전체 과목</option>
+                                <option value="수학">수학</option>
+                                <option value="영어">영어</option>
+                                <option value="과학">과학</option>
+                                <option value="국어">국어</option>
+                                <option value="사회">사회</option>
+                            </select>
+                            <button onclick="toggleTemplateView()" id="toggle-view-btn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm">
+                                📋 원형만 보기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="problems-list" class="p-6">
+                    <div class="text-center text-gray-500 py-8">
+                        로딩 중...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content bg-white rounded-lg max-w-2xl w-full mx-4 shadow-xl">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900" id="upload-modal-title">업로드</h3>
+            </div>
+            <div class="px-6 py-4">
+                <form id="upload-form" class="space-y-4">
+                    <input type="hidden" id="upload-type" value="">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+                        <input type="text" id="upload-title" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">학년</label>
+                            <select id="upload-grade" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">선택하세요</option>
+                                <option value="중1">중1</option>
+                                <option value="중2">중2</option>
+                                <option value="중3">중3</option>
+                                <option value="고1">고1</option>
+                                <option value="고2">고2</option>
+                                <option value="고3">고3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">과목</label>
+                            <select id="upload-subject" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">선택하세요</option>
+                                <option value="수학">수학</option>
+                                <option value="영어">영어</option>
+                                <option value="과학">과학</option>
+                                <option value="국어">국어</option>
+                                <option value="사회">사회</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">출판사</label>
+                        <input type="text" id="upload-publisher" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">PDF 파일</label>
+                        <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors cursor-pointer">
+                            <div class="space-y-2">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                                <div class="text-sm text-gray-600">
+                                    <span class="font-medium text-indigo-600">파일을 선택</span>하거나 드래그하여 업로드
+                                </div>
+                                <p class="text-xs text-gray-500">PDF 파일만 가능합니다</p>
+                                <p id="file-name" class="text-sm font-medium text-gray-900 hidden"></p>
+                            </div>
+                        </div>
+                        <input type="file" id="upload-pdf" accept=".pdf" class="hidden" required>
+                        <p class="text-xs text-gray-500 mt-2">📄 PDF를 업로드하면 Gemini 2.0 Flash가 자동으로 내용을 분석합니다</p>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="hideUploadModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    취소
+                </button>
+                <button onclick="submitUpload()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    업로드
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Problem Detail Modal -->
+    <div id="problem-modal" class="modal">
+        <div class="modal-content bg-white rounded-lg max-w-4xl w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 sticky top-0 bg-white">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">문제 상세</h3>
+                    <button onclick="hideProblemModal()" class="text-gray-400 hover:text-gray-600">✕</button>
+                </div>
+            </div>
+            <div id="problem-detail-content" class="px-6 py-4">
+                <!-- Problem detail will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="modal">
+        <div class="bg-white rounded-lg p-6 max-w-sm">
+            <div class="flex items-center space-x-3">
+                <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div>
+                    <p class="text-lg font-semibold text-gray-900">처리 중...</p>
+                    <p class="text-sm text-gray-600" id="loading-message">잠시만 기다려주세요</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8000'
+            : 'https://gogwan-backend-818506848351.asia-northeast3.run.app';
+
+        let currentTextbookId = null;
+        let currentWorkbookId = null;
+        let showTemplatesOnly = false;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTextbooks();
+            loadWorkbooks();
+            loadAllConcepts();
+            loadProblemTemplates();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById(`tab-${tabName}`).classList.add('border-indigo-500', 'text-indigo-600');
+
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+        }
+
+        // Modal functions
+        function showUploadModal(type) {
+            document.getElementById('upload-type').value = type;
+            document.getElementById('upload-modal-title').textContent = type === 'textbook' ? '교과서 업로드' : '문제집 업로드';
+            document.getElementById('upload-modal').classList.add('active');
+
+            // 드래그 앤 드롭 이벤트 설정
+            setupDragAndDrop();
+        }
+
+        function hideUploadModal() {
+            document.getElementById('upload-modal').classList.remove('active');
+            document.getElementById('upload-form').reset();
+            document.getElementById('file-name').classList.add('hidden');
+            document.getElementById('file-name').textContent = '';
+        }
+
+        // 드래그 앤 드롭 설정
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('upload-pdf');
+            const fileName = document.getElementById('file-name');
+
+            // 드롭존 클릭 시 파일 선택
+            dropZone.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            // 파일 선택 시
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    displayFileName(file.name);
+                }
+            });
+
+            // 드래그 오버
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('border-indigo-500', 'bg-indigo-50');
+            });
+
+            // 드래그 떠남
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+            });
+
+            // 드롭
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('border-indigo-500', 'bg-indigo-50');
+
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    const file = files[0];
+                    if (file.type === 'application/pdf') {
+                        fileInput.files = files;
+                        displayFileName(file.name);
+                    } else {
+                        alert('PDF 파일만 업로드 가능합니다.');
+                    }
+                }
+            });
+        }
+
+        function displayFileName(name) {
+            const fileNameEl = document.getElementById('file-name');
+            fileNameEl.textContent = `📄 ${name}`;
+            fileNameEl.classList.remove('hidden');
+        }
+
+        function showLoading(message = '처리 중...') {
+            document.getElementById('loading-message').textContent = message;
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        function hideProblemModal() {
+            document.getElementById('problem-modal').classList.remove('active');
+        }
+
+        // Upload
+        async function submitUpload() {
+            const type = document.getElementById('upload-type').value;
+            const title = document.getElementById('upload-title').value;
+            const grade = document.getElementById('upload-grade').value;
+            const subject = document.getElementById('upload-subject').value;
+            const publisher = document.getElementById('upload-publisher').value;
+            const pdfFile = document.getElementById('upload-pdf').files[0];
+
+            if (!title || !grade || !subject || !publisher || !pdfFile) {
+                alert('모든 필드를 입력해주세요');
+                return;
+            }
+
+            showLoading('업로드 중...');
+            hideUploadModal();
+
+            try {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Data = e.target.result.split(',')[1];
+                    const endpoint = type === 'textbook' ? 'textbooks' : 'workbooks';
+
+                    const response = await fetch(`${API_URL}/api/gemsem/${endpoint}/upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            title, grade_level: grade, subject, publisher, pdf_base64: base64Data
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        alert(`✅ ${data.message}`);
+                        type === 'textbook' ? loadTextbooks() : loadWorkbooks();
+                    }
+                    hideLoading();
+                };
+                reader.readAsDataURL(pdfFile);
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('❌ 업로드 중 오류: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // Load textbooks
+        async function loadTextbooks() {
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks`);
+                const data = await response.json();
+                const list = document.getElementById('textbooks-list');
+
+                if (data.textbooks.length === 0) {
+                    list.innerHTML = '<div class="px-6 py-12 text-center text-gray-500">아직 업로드된 교과서가 없습니다</div>';
+                    return;
+                }
+
+                list.innerHTML = data.textbooks.map(t => `
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-medium text-gray-900">${t.title}</h3>
+                                <div class="mt-1 text-sm text-gray-600">
+                                    📚 ${t.grade_level} - ${t.subject} | 📖 ${t.publisher}
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="status-badge status-${t.status}">${getStatusText(t.status)}</span>
+                                ${t.status === 'uploaded' ?
+                                    `<button onclick="analyzeTextbook('${t.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">🤖 분석 시작</button>` : ''}
+                                ${t.status === 'completed' ?
+                                    `<button onclick="viewConcepts('${t.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">📖 개념 보기 (${t.concepts_count || 0}개)</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Load textbooks error:', error);
+            }
+        }
+
+        // Analyze textbook
+        async function analyzeTextbook(textbookId) {
+            if (!confirm('교과서 분석을 시작하시겠습니까?')) return;
+            showLoading('개념 추출 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks/${textbookId}/analyze`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadTextbooks();
+                }
+                hideLoading();
+            } catch (error) {
+                console.error('Analyze error:', error);
+                alert('❌ 분석 중 오류: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // View concepts
+        async function viewConcepts(textbookId) {
+            currentTextbookId = textbookId;
+            switchTab('concepts');
+            showLoading('개념 불러오는 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks/${textbookId}/concepts`);
+                const data = await response.json();
+                const list = document.getElementById('concepts-list');
+
+                if (data.concepts.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-8">추출된 개념이 없습니다</div>';
+                    hideLoading();
+                    return;
+                }
+
+                list.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${data.concepts.map(c => `
+                        <div class="concept-card ${c.verified ? 'concept-verified' : 'concept-unverified'}">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">${c.name}</h3>
+                                ${c.verified ?
+                                    '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">✓ 검수완료</span>' :
+                                    `<button onclick="verifyConcept('${c.id}')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300">검수하기</button>`
+                                }
+                            </div>
+                            <p class="text-gray-700 mb-2">${c.description}</p>
+                            ${c.formula ? `<div class="bg-gray-50 border border-gray-200 rounded px-3 py-2 mb-2"><code class="text-indigo-600 font-mono text-sm">${c.formula}</code></div>` : ''}
+                            <div class="text-sm text-gray-600">
+                                📂 ${c.chapter} | 📊 난이도: ${c.difficulty}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+                hideLoading();
+            } catch (error) {
+                console.error('Load concepts error:', error);
+                hideLoading();
+            }
+        }
+
+        // Verify concept
+        async function verifyConcept(conceptId) {
+            try {
+                await fetch(`${API_URL}/api/gemsem/concepts/${conceptId}/verify`, { method: 'PUT' });
+                if (currentTextbookId) {
+                    viewConcepts(currentTextbookId);
+                } else {
+                    loadAllConcepts();
+                }
+            } catch (error) {
+                console.error('Verify concept error:', error);
+            }
+        }
+
+        // Load all concepts (과목별 필터링 지원)
+        async function loadAllConcepts() {
+            const subject = document.getElementById('concepts-subject-filter')?.value || '';
+            showLoading('개념 불러오는 중...');
+
+            try {
+                let url = `${API_URL}/api/gemsem/concepts/all`;
+                if (subject) url += `?subject=${subject}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                const list = document.getElementById('concepts-list');
+
+                if (data.concepts.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-8">추출된 개념이 없습니다</div>';
+                    hideLoading();
+                    return;
+                }
+
+                list.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${data.concepts.map(c => `
+                        <div class="concept-card ${c.verified ? 'concept-verified' : 'concept-unverified'}">
+                            <div class="flex items-start justify-between mb-2">
+                                <h3 class="text-lg font-semibold text-gray-900">${c.name}</h3>
+                                ${c.verified ?
+                                    '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">✓ 검수완료</span>' :
+                                    `<button onclick="verifyConcept('${c.id}')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300">검수하기</button>`
+                                }
+                            </div>
+                            <p class="text-gray-700 mb-2">${c.description}</p>
+                            ${c.formula ? `<div class="bg-gray-50 border border-gray-200 rounded px-3 py-2 mb-2"><code class="text-indigo-600 font-mono text-sm">${c.formula}</code></div>` : ''}
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div>📚 ${c.textbook_title || '제목 없음'} | ${c.subject || '과목 없음'}</div>
+                                <div>📂 ${c.chapter} | 📊 난이도: ${c.difficulty}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+                hideLoading();
+            } catch (error) {
+                console.error('Load all concepts error:', error);
+                hideLoading();
+            }
+        }
+
+        // Load workbooks
+        async function loadWorkbooks() {
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/workbooks`);
+                const data = await response.json();
+                const list = document.getElementById('workbooks-list');
+
+                if (data.workbooks.length === 0) {
+                    list.innerHTML = '<div class="px-6 py-12 text-center text-gray-500">아직 업로드된 문제집이 없습니다</div>';
+                    return;
+                }
+
+                list.innerHTML = data.workbooks.map(w => `
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-medium text-gray-900">${w.title}</h3>
+                                <div class="mt-1 text-sm text-gray-600">
+                                    📝 ${w.grade_level} - ${w.subject} | 📖 ${w.publisher}
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="status-badge status-${w.status}">${getStatusText(w.status)}</span>
+                                ${w.status === 'uploaded' ?
+                                    `<button onclick="analyzeWorkbook('${w.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">🤖 분석 시작</button>` : ''}
+                                ${w.status === 'completed' ?
+                                    `<button onclick="viewProblems('${w.id}')" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm">📝 문제 보기 (${w.problems_count || 0}개)</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Load workbooks error:', error);
+            }
+        }
+
+        // Analyze workbook
+        async function analyzeWorkbook(workbookId) {
+            if (!confirm('문제집 분석을 시작하시겠습니까?')) return;
+            showLoading('문제 추출 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/workbooks/${workbookId}/analyze`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadWorkbooks();
+                }
+                hideLoading();
+            } catch (error) {
+                console.error('Analyze error:', error);
+                alert('❌ 분석 중 오류: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // View problems
+        async function viewProblems(workbookId) {
+            currentWorkbookId = workbookId;
+            switchTab('problems');
+            showLoading('문제 불러오는 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/workbooks/${workbookId}/problems`);
+                const data = await response.json();
+                const list = document.getElementById('problems-list');
+
+                if (data.problems.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-8">추출된 문제가 없습니다</div>';
+                    hideLoading();
+                    return;
+                }
+
+                list.innerHTML = `<div class="space-y-4">
+                    ${data.problems.map(p => `
+                        <div class="problem-card ${p.content_source === 'original' ? 'source-original' : 'source-ai'}">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-2 mb-1">
+                                        <span class="font-bold text-gray-900">${p.problem_number}</span>
+                                        <span class="text-xs px-2 py-1 rounded-full ${p.content_source === 'original' ? 'bg-yellow-200 text-yellow-800' : 'bg-green-200 text-green-800'}">
+                                            ${p.content_source === 'original' ? '📚 오리지널' : '🤖 AI생성'}
+                                        </span>
+                                        <span class="text-xs text-gray-500">난이도: ${p.difficulty}</span>
+                                    </div>
+                                    <p class="text-gray-800 mb-2">${p.problem_text}</p>
+                                    ${p.choices && p.choices.length > 0 ? `
+                                        <div class="ml-4 space-y-1 text-sm text-gray-700">
+                                            ${p.choices.map((c, i) => `<div>${['①','②','③','④','⑤'][i]} ${c}</div>`).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2 mt-3">
+                                <button onclick="showProblemDetail('${p.id}')" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
+                                    상세보기
+                                </button>
+                                ${p.content_source === 'original' ? `
+                                    <button onclick="generateSimilar('${p.id}')" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                        🔄 유사 문제 생성
+                                    </button>
+                                ` : ''}
+                                <button onclick="generateSolution('${p.id}')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                    📖 해설 생성
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>`;
+                hideLoading();
+            } catch (error) {
+                console.error('Load problems error:', error);
+                hideLoading();
+            }
+        }
+
+        // Show problem detail
+        async function showProblemDetail(problemId) {
+            document.getElementById('problem-modal').classList.add('active');
+            const content = document.getElementById('problem-detail-content');
+            content.innerHTML = '<div class="text-center py-8">불러오는 중...</div>';
+
+            try {
+                // Load problem
+                const response = await fetch(`${API_URL}/api/gemsem/workbooks/${currentWorkbookId}/problems`);
+                const data = await response.json();
+                const problem = data.problems.find(p => p.id === problemId);
+
+                // Load solution if exists
+                const solutionResponse = await fetch(`${API_URL}/api/gemsem/problems/${problemId}/solution`);
+                const solutionData = await solutionResponse.json();
+
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xl font-semibold text-gray-900 mb-2">문제 ${problem.problem_number}</h4>
+                            <p class="text-gray-800 mb-4">${problem.problem_text}</p>
+                            ${problem.choices && problem.choices.length > 0 ? `
+                                <div class="ml-4 space-y-2">
+                                    ${problem.choices.map((c, i) => `<div class="text-gray-700">${['①','②','③','④','⑤'][i]} ${c}</div>`).join('')}
+                                </div>
+                            ` : ''}
+                            <div class="mt-4 p-4 bg-gray-50 rounded">
+                                <span class="font-semibold">정답:</span> ${problem.answer}
+                            </div>
+                        </div>
+                        ${solutionData.success ? `
+                            <div class="border-t pt-4">
+                                <h4 class="text-lg font-semibold text-gray-900 mb-3">📖 해설</h4>
+                                <div class="prose prose-sm max-w-none">
+                                    ${solutionData.solution.solution_text.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="border-t pt-4 text-center text-gray-500">
+                                해설이 없습니다. "해설 생성" 버튼을 클릭하세요.
+                            </div>
+                        `}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Show problem detail error:', error);
+                content.innerHTML = '<div class="text-center py-8 text-red-500">문제를 불러올 수 없습니다</div>';
+            }
+        }
+
+        // Generate similar problems
+        async function generateSimilar(problemId) {
+            if (!confirm('유사 문제 3개를 생성하시겠습니까? (약 30초 소요)')) return;
+            showLoading('유사 문제 생성 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/problems/${problemId}/generate-similar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ problem_id: problemId, count: 3 })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}\n생성된 문제는 AI생성 태그로 표시됩니다.`);
+                    viewProblems(currentWorkbookId);
+                }
+                hideLoading();
+            } catch (error) {
+                console.error('Generate similar error:', error);
+                alert('❌ 유사 문제 생성 중 오류: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // Generate solution
+        async function generateSolution(problemId) {
+            if (!confirm('이 문제의 해설을 생성하시겠습니까?')) return;
+            showLoading('해설 생성 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/problems/${problemId}/generate-solution`, { method: 'POST' });
+                const data = await response.json();
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    showProblemDetail(problemId);
+                }
+                hideLoading();
+            } catch (error) {
+                console.error('Generate solution error:', error);
+                alert('❌ 해설 생성 중 오류: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // Load problem templates (문제 원형 목록)
+        async function loadProblemTemplates() {
+            const subject = document.getElementById('problems-subject-filter')?.value || '';
+            showLoading('문제 불러오는 중...');
+
+            try {
+                let url = showTemplatesOnly
+                    ? `${API_URL}/api/gemsem/problems/templates`
+                    : `${API_URL}/api/gemsem/problems/all`;
+
+                if (subject) url += `?subject=${subject}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+                const list = document.getElementById('problems-list');
+                const problems = data.templates || data.problems || [];
+
+                if (problems.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-500 py-8">문제가 없습니다</div>';
+                    hideLoading();
+                    return;
+                }
+
+                // 원형별로 그룹화
+                const templates = problems.filter(p => p.is_template);
+                const templateMap = new Map();
+
+                for (const template of templates) {
+                    templateMap.set(template.id, {
+                        template: template,
+                        derived: problems.filter(p => p.template_id === template.id && !p.is_template)
+                    });
+                }
+
+                list.innerHTML = `<div class="space-y-6">
+                    ${Array.from(templateMap.values()).map(({template, derived}) => `
+                        <div class="border border-gray-300 rounded-lg overflow-hidden">
+                            <!-- 원형 문제 -->
+                            <div class="problem-card source-original border-0">
+                                <div class="flex items-start justify-between mb-2">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="font-bold text-gray-900">${template.problem_number}</span>
+                                            <span class="text-xs px-2 py-1 rounded-full bg-yellow-200 text-yellow-800">
+                                                📚 문제 원형
+                                            </span>
+                                            <span class="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                                                ${template.subject} | ${template.grade_level}
+                                            </span>
+                                            <span class="text-xs text-gray-500">난이도: ${template.difficulty}</span>
+                                            <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                                                파생 ${template.derived_count || 0}개
+                                            </span>
+                                        </div>
+                                        <p class="text-gray-800 mb-2">${template.problem_text}</p>
+                                        ${template.choices && template.choices.length > 0 ? `
+                                            <div class="ml-4 space-y-1 text-sm text-gray-700">
+                                                ${template.choices.map((c, i) => `<div>${['①','②','③','④','⑤'][i]} ${c}</div>`).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2 mt-3">
+                                    <button onclick="showProblemDetail('${template.id}')" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
+                                        상세보기
+                                    </button>
+                                    <button onclick="generateSimilar('${template.id}')" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                        🔄 유사 문제 생성
+                                    </button>
+                                    <button onclick="generateSolution('${template.id}')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                        📖 해설 생성
+                                    </button>
+                                    ${derived.length > 0 ? `
+                                        <button onclick="toggleDerived('${template.id}')" class="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700">
+                                            👁️ 파생 문제 ${derived.length}개 보기
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+
+                            <!-- 파생 문제들 (기본 숨김) -->
+                            ${!showTemplatesOnly && derived.length > 0 ? `
+                                <div id="derived-${template.id}" class="hidden bg-gray-50 border-t border-gray-300 p-4 space-y-3">
+                                    ${derived.map(p => `
+                                        <div class="problem-card source-ai border border-green-200">
+                                            <div class="flex items-start justify-between mb-2">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-2 mb-1">
+                                                        <span class="font-bold text-gray-900">${p.problem_number}</span>
+                                                        <span class="text-xs px-2 py-1 rounded-full bg-green-200 text-green-800">
+                                                            🤖 AI 파생
+                                                        </span>
+                                                        <span class="text-xs text-gray-500">난이도: ${p.difficulty}</span>
+                                                    </div>
+                                                    <p class="text-gray-800 mb-2">${p.problem_text}</p>
+                                                    ${p.choices && p.choices.length > 0 ? `
+                                                        <div class="ml-4 space-y-1 text-sm text-gray-700">
+                                                            ${p.choices.map((c, i) => `<div>${['①','②','③','④','⑤'][i]} ${c}</div>`).join('')}
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center space-x-2 mt-3">
+                                                <button onclick="showProblemDetail('${p.id}')" class="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700">
+                                                    상세보기
+                                                </button>
+                                                <button onclick="generateSolution('${p.id}')" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                                    📖 해설 생성
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `).join('')}
+                </div>`;
+                hideLoading();
+            } catch (error) {
+                console.error('Load problem templates error:', error);
+                hideLoading();
+            }
+        }
+
+        // Toggle derived problems visibility
+        function toggleDerived(templateId) {
+            const derivedSection = document.getElementById(`derived-${templateId}`);
+            if (derivedSection) {
+                derivedSection.classList.toggle('hidden');
+            }
+        }
+
+        // Toggle template-only view
+        function toggleTemplateView() {
+            showTemplatesOnly = !showTemplatesOnly;
+            const btn = document.getElementById('toggle-view-btn');
+            btn.textContent = showTemplatesOnly ? '📋 전체 보기' : '📋 원형만 보기';
+            loadProblemTemplates();
+        }
+
+        function getStatusText(status) {
+            const map = {
+                'uploaded': '업로드 완료',
+                'processing': '처리 중',
+                'completed': '완료',
+                'failed': '실패'
+            };
+            return map[status] || status;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOGWAN 보도자료 관리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+        }
+
+        .form-group textarea.small {
+            min-height: 80px;
+        }
+
+        .form-group textarea.large {
+            min-height: 200px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-edit {
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .release-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .release-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .release-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #e9ecef;
+        }
+
+        .release-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .release-item .meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .release-item .category {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .category.정책 {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .category.행사 {
+            background: #ffedd5;
+            color: #ea580c;
+        }
+
+        .category.발표 {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #2563eb;
+            margin-left: 10px;
+        }
+
+        /* 다이얼로그 스타일 */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .dialog {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .dialog-header {
+            padding: 30px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .dialog-header h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .dialog-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #999;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .dialog-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .dialog-content {
+            padding: 30px;
+        }
+
+        .dialog-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .dialog-meta-item {
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .dialog-section {
+            margin-bottom: 25px;
+        }
+
+        .dialog-section-title {
+            font-size: 0.9em;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .dialog-section-content {
+            font-size: 1em;
+            line-height: 1.8;
+            color: #333;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .dialog-actions {
+            padding: 20px 30px;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            z-index: 10;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .dialog-actions button {
+            flex: 1;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>✨ GOGWAN 보도자료 관리</h1>
+                    <p>보도자료를 작성하고 관리하세요</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <a href="press-sources.html" style="padding: 12px 25px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; transition: transform 0.3s;">
+                        📰 출처 목록
+                    </a>
+                    <a href="index.html" style="padding: 12px 25px; background: white; border: 2px solid #667eea; color: #667eea; text-decoration: none; border-radius: 10px; font-weight: 600; transition: transform 0.3s;">
+                        ← 관리자 메인
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 보도자료 작성 폼 -->
+            <div class="card">
+                <h2 id="form-title">📝 보도자료 작성</h2>
+                <form id="releaseForm">
+                    <input type="hidden" id="editId" value="">
+
+                    <!-- 카테고리 -->
+                    <div class="form-group">
+                        <label for="category">카테고리 *</label>
+                        <select id="category" required>
+                            <option value="">선택하세요</option>
+                            <option value="정책">정책</option>
+                            <option value="행사">행사</option>
+                            <option value="발표">발표</option>
+                        </select>
+                    </div>
+
+                    <!-- 작성자 -->
+                    <div class="form-group">
+                        <label for="authorName">작성자 *</label>
+                        <input type="text" id="authorName" required placeholder="작성자 이름">
+                    </div>
+
+                    <!-- 제목 -->
+                    <div class="form-group">
+                        <label for="title">제목 *</label>
+                        <input type="text" id="title" required placeholder="보도자료 제목을 입력하세요">
+                    </div>
+
+                    <!-- 부제목 (크게) -->
+                    <div class="form-group">
+                        <label for="subtitle">부제목 *</label>
+                        <textarea id="subtitle" class="small" required placeholder="부제목을 입력하세요"></textarea>
+                    </div>
+
+                    <!-- 내용 -->
+                    <div class="form-group">
+                        <label for="content">내용 *</label>
+                        <textarea id="content" class="large" required placeholder="보도자료 내용을 입력하세요"></textarea>
+                    </div>
+
+                    <!-- 배포일 -->
+                    <div class="form-group">
+                        <label for="releaseDate">배포일 *</label>
+                        <input type="date" id="releaseDate" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        📤 보도자료 등록
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none; width: 100%; margin-top: 10px;">
+                        취소
+                    </button>
+                </form>
+            </div>
+
+            <!-- 보도자료 목록 -->
+            <div class="card">
+                <h2>📋 보도자료 목록</h2>
+                <div id="releaseList" class="release-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>로딩 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상세보기 다이얼로그 -->
+    <div id="viewDialog" class="dialog-overlay hidden" onclick="closeDialog(event)">
+        <div class="dialog" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <h2 id="dialogTitle"></h2>
+                <button class="dialog-close" onclick="closeDialog()">×</button>
+            </div>
+            <div class="dialog-content">
+                <div class="dialog-meta">
+                    <span class="dialog-meta-item" id="dialogCategory"></span>
+                    <span class="dialog-meta-item" id="dialogAuthor"></span>
+                    <span class="dialog-meta-item" id="dialogDate"></span>
+                    <span class="dialog-meta-item" id="dialogViews"></span>
+                </div>
+
+                <div class="dialog-section">
+                    <div class="dialog-section-title">부제목</div>
+                    <div class="dialog-section-content" id="dialogSubtitle"></div>
+                </div>
+
+                <div class="dialog-section">
+                    <div class="dialog-section-title">본문</div>
+                    <div class="dialog-section-content" id="dialogContent"></div>
+                </div>
+            </div>
+            <div class="dialog-actions">
+                <button class="btn btn-edit" id="dialogEditBtn">✏️ 수정</button>
+                <button class="btn btn-delete" id="dialogDeleteBtn">🗑️ 삭제</button>
+                <button class="btn btn-secondary" onclick="closeDialog()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // DOM 요소
+        const form = document.getElementById('releaseForm');
+        const releaseList = document.getElementById('releaseList');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formTitle = document.getElementById('form-title');
+        const editIdInput = document.getElementById('editId');
+
+        // 오늘 날짜를 기본값으로 설정
+        document.getElementById('releaseDate').valueAsDate = new Date();
+
+        // 보도자료 목록 불러오기
+        async function loadReleases() {
+            releaseList.innerHTML = '<div class="loading"><div class="spinner"></div><p>로딩 중...</p></div>';
+
+            try {
+                const q = query(collection(db, 'press_releases'), orderBy('releaseDate', 'desc'));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    releaseList.innerHTML = '<div class="loading"><p>등록된 보도자료가 없습니다.</p></div>';
+                    return;
+                }
+
+                releaseList.innerHTML = '';
+                querySnapshot.forEach((docSnapshot) => {
+                    const data = docSnapshot.data();
+                    const releaseDate = data.releaseDate?.toDate() || new Date();
+
+                    const item = document.createElement('div');
+                    item.className = 'release-item';
+                    item.onclick = () => openDialog(docSnapshot.id, data);
+                    item.innerHTML = `
+                        <h3>${data.title}</h3>
+                        <div class="meta">
+                            <span class="category ${data.category}">${data.category}</span>
+                            ${data.isAiGenerated ? '<span class="badge">🤖 AI 생성</span>' : ''}
+                        </div>
+                        <p style="color: #666; margin: 10px 0;">${data.subtitle}</p>
+                        <div class="meta">
+                            📅 ${releaseDate.toLocaleDateString('ko-KR')} |
+                            👤 ${data.authorName} |
+                            👁️ ${data.views || 0}회
+                        </div>
+                    `;
+                    releaseList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('Error loading releases:', error);
+                releaseList.innerHTML = '<div class="loading"><p>❌ 오류가 발생했습니다.</p></div>';
+            }
+        }
+
+        // 다이얼로그 열기
+        let currentDialogId = null;
+        let currentDialogData = null;
+
+        window.openDialog = function(id, data) {
+            currentDialogId = id;
+            currentDialogData = data;
+
+            const releaseDate = data.releaseDate?.toDate() || new Date();
+
+            document.getElementById('dialogTitle').textContent = data.title;
+            document.getElementById('dialogCategory').innerHTML = `<span class="category ${data.category}">${data.category}</span>`;
+            document.getElementById('dialogAuthor').textContent = '👤 ' + data.authorName;
+            document.getElementById('dialogDate').textContent = '📅 ' + releaseDate.toLocaleDateString('ko-KR');
+            document.getElementById('dialogViews').textContent = '👁️ ' + (data.views || 0) + '회';
+            document.getElementById('dialogSubtitle').textContent = data.subtitle;
+            document.getElementById('dialogContent').textContent = data.content;
+
+            document.getElementById('viewDialog').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        // 다이얼로그 닫기
+        window.closeDialog = function(event) {
+            if (event && event.target !== event.currentTarget && event.type === 'click') {
+                return;
+            }
+            document.getElementById('viewDialog').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            currentDialogId = null;
+            currentDialogData = null;
+        };
+
+        // 다이얼로그에서 수정 버튼
+        document.getElementById('dialogEditBtn').addEventListener('click', () => {
+            if (!currentDialogId || !currentDialogData) return;
+
+            editIdInput.value = currentDialogId;
+            document.getElementById('category').value = currentDialogData.category;
+            document.getElementById('authorName').value = currentDialogData.authorName;
+            document.getElementById('title').value = currentDialogData.title;
+            document.getElementById('subtitle').value = currentDialogData.subtitle;
+            document.getElementById('content').value = currentDialogData.content;
+
+            // 배포일 설정
+            const releaseDate = currentDialogData.releaseDate?.toDate() || new Date();
+            const year = releaseDate.getFullYear();
+            const month = String(releaseDate.getMonth() + 1).padStart(2, '0');
+            const day = String(releaseDate.getDate()).padStart(2, '0');
+            document.getElementById('releaseDate').value = `${year}-${month}-${day}`;
+
+            formTitle.textContent = '✏️ 보도자료 수정';
+            submitBtn.textContent = '💾 수정 완료';
+            cancelBtn.style.display = 'block';
+
+            closeDialog();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // 다이얼로그에서 삭제 버튼
+        document.getElementById('dialogDeleteBtn').addEventListener('click', async () => {
+            if (!currentDialogId) return;
+
+            if (!confirm('정말로 이 보도자료를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'press_releases', currentDialogId));
+                alert('✅ 보도자료가 삭제되었습니다!');
+                closeDialog();
+                loadReleases();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ 삭제 실패: ' + error.message);
+            }
+        });
+
+        // 보도자료 추가/수정
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // 날짜 문자열을 Date 객체로 변환
+            const releaseDateStr = document.getElementById('releaseDate').value;
+            const releaseDate = new Date(releaseDateStr + 'T00:00:00');
+
+            const data = {
+                category: document.getElementById('category').value,
+                authorName: document.getElementById('authorName').value,
+                title: document.getElementById('title').value,
+                subtitle: document.getElementById('subtitle').value,
+                content: document.getElementById('content').value,
+                releaseDate: Timestamp.fromDate(releaseDate),
+                isAiGenerated: false,
+                views: 0,
+                updatedAt: serverTimestamp()
+            };
+
+            const editId = editIdInput.value;
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '처리 중...';
+
+                if (editId) {
+                    // 수정
+                    await updateDoc(doc(db, 'press_releases', editId), data);
+                    alert('✅ 보도자료가 수정되었습니다!');
+                } else {
+                    // 추가 (createdAt은 최초 생성시에만)
+                    data.createdAt = serverTimestamp();
+                    await addDoc(collection(db, 'press_releases'), data);
+                    alert('✅ 보도자료가 등록되었습니다!');
+                }
+
+                form.reset();
+                editIdInput.value = '';
+                cancelEdit();
+                loadReleases();
+
+                // 날짜 필드 초기화
+                document.getElementById('releaseDate').valueAsDate = new Date();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ 오류가 발생했습니다: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📤 보도자료 등록';
+            }
+        });
+
+        // 수정 취소
+        function cancelEdit() {
+            editIdInput.value = '';
+            form.reset();
+            formTitle.textContent = '📝 보도자료 작성';
+            submitBtn.textContent = '📤 보도자료 등록';
+            cancelBtn.style.display = 'none';
+            document.getElementById('releaseDate').valueAsDate = new Date();
+        }
+
+        cancelBtn.addEventListener('click', cancelEdit);
+
+        // 초기 로드
+        loadReleases();
+    </script>
+</body>
+</html>

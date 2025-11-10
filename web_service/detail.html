@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보도자료 상세 - GOGWAN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .detail-container {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .detail-header {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+
+        .detail-category {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.875em;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .detail-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .detail-subtitle {
+            font-size: 1.25em;
+            color: #6B7280;
+            margin-bottom: 16px;
+        }
+
+        .detail-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.875em;
+            color: #9CA3AF;
+        }
+
+        .detail-content {
+            font-size: 1.125em;
+            line-height: 1.8;
+            color: #1F2937;
+            white-space: pre-wrap;
+        }
+
+        .delete-button {
+            background: #EF4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 24px;
+        }
+
+        .delete-button:hover {
+            background: #DC2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="location.href='press-release.html'">←</button>
+            <h1 class="page-title">보도자료 상세</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 상세 내용 -->
+        <div class="detail-container" id="detailContainer">
+            <div style="text-align: center; padding: 40px; color: #6B7280;">
+                로딩 중...
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // URL에서 ID 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const releaseId = urlParams.get('id');
+
+        if (!releaseId) {
+            location.href = 'press-release.html';
+        }
+
+        // 보도자료 로드
+        async function loadRelease() {
+            const container = document.getElementById('detailContainer');
+
+            try {
+                const docRef = doc(db, 'press_releases', releaseId);
+                const docSnap = await getDoc(docRef);
+
+                if (!docSnap.exists()) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #EF4444;">
+                            ❌ 보도자료를 찾을 수 없습니다
+                        </div>
+                    `;
+                    return;
+                }
+
+                const data = docSnap.data();
+                const date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+                const dateStr = date.toLocaleDateString('ko-KR');
+
+                const categoryClass = data.category === '정책' ? 'category-badge 정책' :
+                                     data.category === '행사' ? 'category-badge 행사' :
+                                     'category-badge 발표';
+
+                container.innerHTML = `
+                    <div class="detail-header">
+                        <span class="${categoryClass} detail-category">${data.category}</span>
+                        ${data.isAiGenerated ? '<span class="ai-badge" style="margin-left: 8px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/></svg> AI 생성</span>' : ''}
+                        <h1 class="detail-title">${data.title}</h1>
+                        <div class="detail-subtitle">${data.subtitle}</div>
+                        <div class="detail-meta">
+                            <span>📅 ${dateStr}</span>
+                            <span>👤 ${data.authorName}</span>
+                            <span>👁️ ${data.views || 0}회</span>
+                        </div>
+                    </div>
+                    <div class="detail-content">${data.content}</div>
+                    <button class="delete-button" onclick="deleteRelease()">🗑️ 보도자료 삭제</button>
+                `;
+            } catch (error) {
+                console.error('Error loading release:', error);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #EF4444;">
+                        ❌ 오류가 발생했습니다
+                    </div>
+                `;
+            }
+        }
+
+        // 삭제
+        window.deleteRelease = async function() {
+            if (!confirm('정말로 이 보도자료를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                await deleteDoc(doc(db, 'press_releases', releaseId));
+                alert('✅ 보도자료가 삭제되었습니다!');
+                location.href = 'press-release.html';
+            } catch (error) {
+                alert('❌ 삭제 실패: ' + error.message);
+                console.error(error);
+            }
+        };
+
+        // 초기 로드
+        loadRelease();
+    </script>
+</body>
+</html>

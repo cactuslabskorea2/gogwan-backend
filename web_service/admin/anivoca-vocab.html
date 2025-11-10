@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>애니보카 단어 관리</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .image-upload-zone {
+            border: 3px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .image-upload-zone:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .image-upload-zone.dragover {
+            border-color: #667eea;
+            background: #e0e7ff;
+        }
+
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 15px auto;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .image-preview.show {
+            display: block;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-csv {
+            background: #28a745;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-edit {
+            background: #28a745;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .vocab-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .vocab-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .vocab-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: #e9ecef;
+        }
+
+        .vocab-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            background: #ddd;
+        }
+
+        .vocab-item-content {
+            flex: 1;
+        }
+
+        .vocab-item h3 {
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .vocab-item .translation {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .vocab-item .card-id {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #2563eb;
+            margin-top: 5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>📚 애니보카 단어 관리</h1>
+                    <p>TOEIC 단어와 이미지를 관리하세요</p>
+                </div>
+                <div>
+                    <a href="index.html" style="padding: 12px 25px; background: white; border: 2px solid #667eea; color: #667eea; text-decoration: none; border-radius: 10px; font-weight: 600; transition: transform 0.3s;">
+                        ← 관리자 메인
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 단어 추가 폼 -->
+            <div class="card">
+                <h2 id="form-title">✏️ 단어 추가</h2>
+                <form id="vocabForm">
+                    <input type="hidden" id="editId" value="">
+
+                    <!-- 카드 ID -->
+                    <div class="form-group">
+                        <label for="cardId">카드 ID *</label>
+                        <input type="text" id="cardId" required placeholder="예: card001">
+                    </div>
+
+                    <!-- 영어 단어 -->
+                    <div class="form-group">
+                        <label for="english">영어 *</label>
+                        <input type="text" id="english" required placeholder="예: apple">
+                    </div>
+
+                    <!-- 한글 뜻 -->
+                    <div class="form-group">
+                        <label for="korean">한글 뜻 *</label>
+                        <input type="text" id="korean" required placeholder="예: 사과">
+                    </div>
+
+                    <!-- 예문 -->
+                    <div class="form-group">
+                        <label for="example">예문</label>
+                        <textarea id="example" placeholder="예: I like apples."></textarea>
+                    </div>
+
+                    <!-- 이미지 업로드 -->
+                    <div class="form-group">
+                        <label>이미지</label>
+                        <div class="image-upload-zone" id="imageUploadZone">
+                            <div>📷 클릭하거나 드래그하여 이미지 업로드</div>
+                            <div style="font-size: 0.9em; color: #999; margin-top: 10px;">
+                                권장: WEBP, JPG, PNG (최대 5MB)
+                            </div>
+                            <img id="imagePreview" class="image-preview" />
+                        </div>
+                        <input type="file" id="imageFile" accept="image/*" style="display: none;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        💾 단어 추가
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">
+                        취소
+                    </button>
+
+                    <!-- CSV 업로드 버튼 -->
+                    <button type="button" class="btn btn-csv" id="csvBtn">
+                        📊 CSV 일괄 업로드
+                    </button>
+                    <input type="file" id="csvFile" accept=".csv" style="display: none;">
+                </form>
+            </div>
+
+            <!-- 단어 목록 -->
+            <div class="card">
+                <h2>📋 단어 목록 <span id="wordCount" style="font-size: 0.8em; color: #999;"></span></h2>
+
+                <!-- 검색 -->
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 단어 검색...">
+                </div>
+
+                <div id="vocabList" class="vocab-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>로딩 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXK7jYyGeYuw8HsOGizonZsHof0ospwQI",
+            authDomain: "nubvoca.firebaseapp.com",
+            projectId: "nubvoca",
+            storageBucket: "nubvoca.firebasestorage.app",
+            messagingSenderId: "794825097826",
+            appId: "1:794825097826:web:24e15d5f71b9e48123073b"
+        };
+
+        // Firebase 초기화 (별도 앱 이름 지정하여 auth-check.js와 충돌 방지)
+        const app = initializeApp(firebaseConfig, "anivoca-app");
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        // DOM 요소
+        const form = document.getElementById('vocabForm');
+        const vocabList = document.getElementById('vocabList');
+        const submitBtn = document.getElementById('submitBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const formTitle = document.getElementById('form-title');
+        const editIdInput = document.getElementById('editId');
+        const imageUploadZone = document.getElementById('imageUploadZone');
+        const imageFile = document.getElementById('imageFile');
+        const imagePreview = document.getElementById('imagePreview');
+        const searchInput = document.getElementById('searchInput');
+        const wordCount = document.getElementById('wordCount');
+        const csvBtn = document.getElementById('csvBtn');
+        const csvFile = document.getElementById('csvFile');
+
+        let allWords = [];
+        let selectedImageFile = null;
+
+        // 이미지 업로드 존 클릭
+        imageUploadZone.addEventListener('click', () => imageFile.click());
+
+        // 이미지 파일 선택
+        imageFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedImageFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 드래그 앤 드롭
+        imageUploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadZone.classList.add('dragover');
+        });
+
+        imageUploadZone.addEventListener('dragleave', () => {
+            imageUploadZone.classList.remove('dragover');
+        });
+
+        imageUploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                selectedImageFile = file;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // CSV 업로드 버튼
+        csvBtn.addEventListener('click', () => csvFile.click());
+
+        // CSV 파일 처리
+        csvFile.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!confirm('CSV 파일을 업로드하시겠습니까? 기존 데이터에 추가됩니다.')) {
+                csvFile.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n');
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    submitBtn.disabled = true;
+                    csvBtn.disabled = true;
+                    csvBtn.textContent = '업로드 중...';
+
+                    // 첫 줄은 헤더로 건너뛰기
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+
+                        const [cardId, english, korean, example] = line.split(',').map(s => s.trim());
+
+                        if (cardId && english && korean) {
+                            try {
+                                await addDoc(collection(db, 'anivoca_vocabulary'), {
+                                    cardId,
+                                    english,
+                                    korean,
+                                    example: example || '',
+                                    imageUrl: '',
+                                    createdAt: serverTimestamp(),
+                                    updatedAt: serverTimestamp()
+                                });
+                                successCount++;
+                            } catch (error) {
+                                console.error(`Error adding ${cardId}:`, error);
+                                errorCount++;
+                            }
+                        }
+                    }
+
+                    alert(`✅ CSV 업로드 완료!\n성공: ${successCount}개\n실패: ${errorCount}개`);
+                    loadWords();
+                } catch (error) {
+                    console.error('CSV parsing error:', error);
+                    alert('❌ CSV 파일 처리 중 오류가 발생했습니다.');
+                } finally {
+                    submitBtn.disabled = false;
+                    csvBtn.disabled = false;
+                    csvBtn.textContent = '📊 CSV 일괄 업로드';
+                    csvFile.value = '';
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        // 단어 목록 불러오기
+        async function loadWords() {
+            vocabList.innerHTML = '<div class="loading"><div class="spinner"></div><p>로딩 중...</p></div>';
+
+            try {
+                // createdAt 필드가 없을 수 있으므로 정렬 없이 가져오기
+                const querySnapshot = await getDocs(collection(db, 'anivoca_vocabulary'));
+
+                allWords = [];
+                querySnapshot.forEach((docSnapshot) => {
+                    allWords.push({
+                        id: docSnapshot.id,
+                        ...docSnapshot.data()
+                    });
+                });
+
+                displayWords(allWords);
+            } catch (error) {
+                console.error('Error loading words:', error);
+                vocabList.innerHTML = '<div class="loading"><p>❌ 오류가 발생했습니다.</p></div>';
+            }
+        }
+
+        // 단어 목록 표시
+        function displayWords(words) {
+            if (words.length === 0) {
+                vocabList.innerHTML = '<div class="loading"><p>등록된 단어가 없습니다.</p></div>';
+                wordCount.textContent = '';
+                return;
+            }
+
+            wordCount.textContent = `(총 ${words.length}개)`;
+            vocabList.innerHTML = '';
+
+            words.forEach((word) => {
+                const item = document.createElement('div');
+                item.className = 'vocab-item';
+                item.innerHTML = `
+                    ${word.imageUrl ?
+                        `<img src="${word.imageUrl}" class="vocab-item-image" alt="${word.english}">` :
+                        `<div class="vocab-item-image" style="display: flex; align-items: center; justify-content: center; color: #999;">📷</div>`
+                    }
+                    <div class="vocab-item-content">
+                        <h3>${word.english}</h3>
+                        <div class="translation">${word.korean}</div>
+                        <span class="card-id">${word.cardId}</span>
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn btn-edit" onclick="editWord('${word.id}')">✏️</button>
+                        <button class="btn btn-delete" onclick="deleteWord('${word.id}', '${word.cardId}')">🗑️</button>
+                    </div>
+                `;
+                vocabList.appendChild(item);
+            });
+        }
+
+        // 검색
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            if (!searchTerm) {
+                displayWords(allWords);
+                return;
+            }
+
+            const filtered = allWords.filter(word =>
+                word.english.toLowerCase().includes(searchTerm) ||
+                word.korean.includes(searchTerm) ||
+                word.cardId.toLowerCase().includes(searchTerm)
+            );
+            displayWords(filtered);
+        });
+
+        // 단어 추가/수정
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const cardId = document.getElementById('cardId').value.trim();
+            const english = document.getElementById('english').value.trim();
+            const korean = document.getElementById('korean').value.trim();
+            const example = document.getElementById('example').value.trim();
+            const editId = editIdInput.value;
+
+            let imageUrl = '';
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = '처리 중...';
+
+                // 이미지 업로드
+                if (selectedImageFile) {
+                    const storageRef = ref(storage, `anivoca_images/${cardId}`);
+                    await uploadBytes(storageRef, selectedImageFile);
+                    imageUrl = await getDownloadURL(storageRef);
+                }
+
+                const data = {
+                    cardId,
+                    english,
+                    korean,
+                    example,
+                    updatedAt: serverTimestamp()
+                };
+
+                if (imageUrl) {
+                    data.imageUrl = imageUrl;
+                }
+
+                if (editId) {
+                    // 수정
+                    await updateDoc(doc(db, 'anivoca_vocabulary', editId), data);
+                    alert('✅ 단어가 수정되었습니다!');
+                } else {
+                    // 추가
+                    data.createdAt = serverTimestamp();
+                    if (!imageUrl) data.imageUrl = '';
+                    await addDoc(collection(db, 'anivoca_vocabulary'), data);
+                    alert('✅ 단어가 추가되었습니다!');
+                }
+
+                form.reset();
+                editIdInput.value = '';
+                selectedImageFile = null;
+                imagePreview.classList.remove('show');
+                cancelEdit();
+                loadWords();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ 오류가 발생했습니다: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 단어 추가';
+            }
+        });
+
+        // 단어 수정
+        window.editWord = function(id) {
+            const word = allWords.find(w => w.id === id);
+            if (!word) return;
+
+            editIdInput.value = id;
+            document.getElementById('cardId').value = word.cardId;
+            document.getElementById('english').value = word.english;
+            document.getElementById('korean').value = word.korean;
+            document.getElementById('example').value = word.example || '';
+
+            if (word.imageUrl) {
+                imagePreview.src = word.imageUrl;
+                imagePreview.classList.add('show');
+            }
+
+            formTitle.textContent = '✏️ 단어 수정';
+            submitBtn.textContent = '💾 수정 완료';
+            cancelBtn.style.display = 'block';
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        // 단어 삭제
+        window.deleteWord = async function(id, cardId) {
+            if (!confirm(`"${cardId}" 단어를 삭제하시겠습니까?`)) return;
+
+            try {
+                // Firestore에서 삭제
+                await deleteDoc(doc(db, 'anivoca_vocabulary', id));
+
+                // Storage에서 이미지 삭제 시도
+                try {
+                    const storageRef = ref(storage, `anivoca_images/${cardId}`);
+                    await deleteObject(storageRef);
+                } catch (error) {
+                    console.log('이미지 삭제 실패 (없을 수 있음):', error);
+                }
+
+                alert('✅ 단어가 삭제되었습니다!');
+                loadWords();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ 삭제 실패: ' + error.message);
+            }
+        };
+
+        // 수정 취소
+        function cancelEdit() {
+            editIdInput.value = '';
+            form.reset();
+            selectedImageFile = null;
+            imagePreview.classList.remove('show');
+            formTitle.textContent = '✏️ 단어 추가';
+            submitBtn.textContent = '💾 단어 추가';
+            cancelBtn.style.display = 'none';
+        }
+
+        cancelBtn.addEventListener('click', cancelEdit);
+
+        // 초기 로드
+        loadWords();
+    </script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 및 콘솔 관리 - GOGWAN Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 { color: #667eea; font-size: 2.5em; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 1.1em; }
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.5em;
+        }
+        .console-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .console-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .console-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+        .console-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        .console-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        .console-card p {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        .console-card .link-label {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.85em;
+            color: #667eea;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .api-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .api-section h2 {
+            color: white;
+            border-bottom-color: rgba(255,255,255,0.3);
+        }
+        .api-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .api-card h3,
+        .api-card p {
+            color: white;
+        }
+        .api-card .link-label {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        .api-card:hover {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.4);
+        }
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .stat-box .label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            padding: 12px 24px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .info-box p {
+            color: #1e40af;
+            margin: 0;
+            font-size: 0.95em;
+        }
+        @media (max-width: 768px) {
+            .console-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 API 및 콘솔 관리</h1>
+            <p>Gemini API, Firebase, Google Cloud 통합 관리</p>
+            <a href="index.html" class="back-link">← 관리자 메인</a>
+        </div>
+
+        <!-- Gemini API 섹션 -->
+        <div class="section api-section">
+            <h2>🤖 Gemini API 관리</h2>
+
+            <div class="usage-stats">
+                <div class="stat-box">
+                    <div class="label">API 상태</div>
+                    <div class="value" id="apiStatus">✓</div>
+                    <div class="label">정상 작동</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">오늘 사용량</div>
+                    <div class="value" id="todayUsage">-</div>
+                    <div class="label">요청 수</div>
+                </div>
+                <div class="stat-box">
+                    <div class="label">이번 달</div>
+                    <div class="value" id="monthUsage">-</div>
+                    <div class="label">총 요청</div>
+                </div>
+            </div>
+
+            <div class="console-grid" style="margin-top: 30px;">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="console-card api-card">
+                    <div class="icon">🔑</div>
+                    <h3>API Key 발급</h3>
+                    <p>Gemini API 키를 생성하고 관리합니다</p>
+                    <span class="link-label">Google AI Studio →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com/metrics?project=gogwan-e79bc" target="_blank" class="console-card api-card">
+                    <div class="icon">📊</div>
+                    <h3>사용량 확인</h3>
+                    <p>API 요청 수와 할당량 리미트를 확인합니다</p>
+                    <span class="link-label">Cloud Console →</span>
+                </a>
+
+                <a href="https://ai.google.dev/gemini-api/docs" target="_blank" class="console-card api-card">
+                    <div class="icon">📚</div>
+                    <h3>API 문서</h3>
+                    <p>Gemini API 사용법과 예제를 확인합니다</p>
+                    <span class="link-label">문서 보기 →</span>
+                </a>
+
+                <a href="https://ai.google.dev/gemini-api/docs/models/gemini" target="_blank" class="console-card api-card">
+                    <div class="icon">🧠</div>
+                    <h3>모델 정보</h3>
+                    <p>사용 가능한 Gemini 모델과 스펙을 확인합니다</p>
+                    <span class="link-label">모델 목록 →</span>
+                </a>
+            </div>
+
+            <div class="info-box" style="background: rgba(255,255,255,0.1); border-left-color: white;">
+                <p style="color: white;">
+                    💡 <strong>현재 사용 중인 모델:</strong> Gemini 1.5 Pro & Flash<br>
+                    📌 <strong>백엔드 API 엔드포인트:</strong> Railway 배포 서버
+                </p>
+            </div>
+        </div>
+
+        <!-- Firebase 콘솔 -->
+        <div class="section">
+            <h2>🔥 Firebase 콘솔</h2>
+
+            <div class="console-grid">
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/overview" target="_blank" class="console-card">
+                    <div class="icon">🏠</div>
+                    <h3>프로젝트 개요</h3>
+                    <p>Firebase 프로젝트의 전체 현황을 확인합니다</p>
+                    <span class="link-label">gogwan-e79bc →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/authentication/users" target="_blank" class="console-card">
+                    <div class="icon">👤</div>
+                    <h3>Authentication</h3>
+                    <p>관리자 및 사용자 인증을 관리합니다</p>
+                    <span class="link-label">사용자 관리 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/firestore/databases/-default-/data" target="_blank" class="console-card">
+                    <div class="icon">💾</div>
+                    <h3>Firestore Database</h3>
+                    <p>보도자료, 분석 데이터 등을 관리합니다</p>
+                    <span class="link-label">데이터베이스 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/firestore/databases/-default-/rules" target="_blank" class="console-card">
+                    <div class="icon">🛡️</div>
+                    <h3>보안 규칙</h3>
+                    <p>Firestore 읽기/쓰기 권한을 설정합니다</p>
+                    <span class="link-label">규칙 편집 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/storage" target="_blank" class="console-card">
+                    <div class="icon">📦</div>
+                    <h3>Storage</h3>
+                    <p>이미지 및 파일을 저장하고 관리합니다</p>
+                    <span class="link-label">스토리지 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/functions" target="_blank" class="console-card">
+                    <div class="icon">⚡</div>
+                    <h3>Cloud Functions</h3>
+                    <p>서버리스 백엔드 함수를 관리합니다</p>
+                    <span class="link-label">함수 관리 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/usage" target="_blank" class="console-card">
+                    <div class="icon">📈</div>
+                    <h3>사용량 통계</h3>
+                    <p>Firebase 서비스 사용량을 확인합니다</p>
+                    <span class="link-label">통계 보기 →</span>
+                </a>
+
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/settings/general" target="_blank" class="console-card">
+                    <div class="icon">⚙️</div>
+                    <h3>프로젝트 설정</h3>
+                    <p>API 키, 앱 설정 등을 관리합니다</p>
+                    <span class="link-label">설정 →</span>
+                </a>
+            </div>
+
+            <div class="info-box">
+                <p>
+                    💡 <strong>프로젝트 ID:</strong> gogwan-e79bc<br>
+                    📌 <strong>현재 플랜:</strong> Spark (무료) - Blaze (종량제)로 업그레이드 가능
+                </p>
+            </div>
+        </div>
+
+        <!-- Google Cloud 콘솔 -->
+        <div class="section">
+            <h2>☁️ Google Cloud Console</h2>
+
+            <div class="console-grid">
+                <a href="https://console.cloud.google.com/home/dashboard?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">🏠</div>
+                    <h3>대시보드</h3>
+                    <p>Google Cloud 프로젝트 전체 현황</p>
+                    <span class="link-label">대시보드 →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/apis/dashboard?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">🔌</div>
+                    <h3>API 및 서비스</h3>
+                    <p>사용 중인 API와 서비스 키를 관리합니다</p>
+                    <span class="link-label">API 관리 →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/apis/credentials?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">🔑</div>
+                    <h3>사용자 인증 정보</h3>
+                    <p>API 키, OAuth, 서비스 계정을 관리합니다</p>
+                    <span class="link-label">인증 정보 →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/iam-admin/iam?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">👥</div>
+                    <h3>IAM 및 관리자</h3>
+                    <p>프로젝트 권한과 역할을 설정합니다</p>
+                    <span class="link-label">권한 관리 →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/billing?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">💳</div>
+                    <h3>결제</h3>
+                    <p>사용 요금과 예산을 확인합니다</p>
+                    <span class="link-label">결제 정보 →</span>
+                </a>
+
+                <a href="https://console.cloud.google.com/monitoring?project=gogwan-e79bc" target="_blank" class="console-card">
+                    <div class="icon">📊</div>
+                    <h3>모니터링</h3>
+                    <p>시스템 성능과 로그를 확인합니다</p>
+                    <span class="link-label">모니터링 →</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 배포 관리 -->
+        <div class="section">
+            <h2>🚀 배포 및 호스팅</h2>
+
+            <div class="console-grid">
+                <a href="https://app.netlify.com/sites/gorgeous-cocada-91bd09/overview" target="_blank" class="console-card">
+                    <div class="icon">🌐</div>
+                    <h3>Netlify Dashboard</h3>
+                    <p>프론트엔드 배포 상태 및 설정</p>
+                    <span class="link-label">cactuslabskorea.com →</span>
+                </a>
+
+                <a href="https://railway.app" target="_blank" class="console-card">
+                    <div class="icon">🚂</div>
+                    <h3>Railway Dashboard</h3>
+                    <p>백엔드 API 서버 관리</p>
+                    <span class="link-label">Backend API →</span>
+                </a>
+
+                <a href="https://github.com/cactuslabskorea2" target="_blank" class="console-card">
+                    <div class="icon">🐙</div>
+                    <h3>GitHub Repository</h3>
+                    <p>소스 코드 저장소</p>
+                    <span class="link-label">GitHub →</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 빠른 작업 -->
+        <div class="section">
+            <h2>⚡ 빠른 작업</h2>
+
+            <div class="quick-actions">
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/firestore/databases/-default-/rules" target="_blank" class="action-btn">
+                    🛡️ Firestore 규칙 수정
+                </a>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="action-btn">
+                    🔑 새 API 키 생성
+                </a>
+                <a href="https://console.firebase.google.com/project/gogwan-e79bc/authentication/users" target="_blank" class="action-btn">
+                    👤 사용자 추가
+                </a>
+                <a href="https://app.netlify.com/sites/gorgeous-cocada-91bd09/deploys" target="_blank" class="action-btn">
+                    🚀 배포 기록 보기
+                </a>
+                <a href="https://console.cloud.google.com/apis/credentials?project=gogwan-e79bc" target="_blank" class="action-btn">
+                    🔐 API 키 관리
+                </a>
+            </div>
+
+            <div class="info-box" style="margin-top: 20px;">
+                <p>
+                    💡 모든 링크는 새 탭에서 열립니다. 각 콘솔에 로그인이 필요할 수 있습니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // API 사용량 통계 로드 (Firebase Analytics에서)
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadAPIUsage() {
+            try {
+                // 오늘 사용량
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const todayQuery = query(
+                    collection(db, 'analytics_feature_usage'),
+                    where('timestamp', '>=', today)
+                );
+                const todaySnapshot = await getDocs(todayQuery);
+                document.getElementById('todayUsage').textContent = todaySnapshot.size;
+
+                // 이번 달 사용량
+                const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+                const monthQuery = query(
+                    collection(db, 'analytics_feature_usage'),
+                    where('timestamp', '>=', monthStart)
+                );
+                const monthSnapshot = await getDocs(monthQuery);
+                document.getElementById('monthUsage').textContent = monthSnapshot.size;
+
+            } catch (error) {
+                console.error('API usage load error:', error);
+                document.getElementById('todayUsage').textContent = '-';
+                document.getElementById('monthUsage').textContent = '-';
+            }
+        }
+
+        loadAPIUsage();
+    </script>
+</body>
+</html>

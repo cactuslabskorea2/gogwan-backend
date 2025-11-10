@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보도자료 출처 목록 - GOGWAN Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-back:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+
+        .section-intro {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section-intro p {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .source-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .source-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .source-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+
+        .source-card h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .source-card .icon {
+            font-size: 1.3em;
+        }
+
+        .source-card a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 10px;
+            transition: color 0.2s;
+        }
+
+        .source-card a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .source-card .description {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .badge.central {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge.metro {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .badge.portal {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .search-box {
+            margin-bottom: 25px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .stat-card .label {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .local-region {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .local-region:hover {
+            border-color: #667eea;
+        }
+
+        .local-region-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .local-region-header:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .local-region-header h3 {
+            color: #333;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+
+        .local-region-header .count {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .local-region-header .toggle {
+            font-size: 1.5em;
+            color: #667eea;
+            transition: transform 0.3s;
+        }
+
+        .local-region-header.expanded .toggle {
+            transform: rotate(180deg);
+        }
+
+        .local-region-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+
+        .local-region-content.expanded {
+            max-height: 5000px;
+            transition: max-height 0.6s ease-in;
+        }
+
+        .local-region-grid {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .local-source-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .local-source-card:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .local-source-card h4 {
+            color: #333;
+            font-size: 1em;
+            margin-bottom: 8px;
+        }
+
+        .local-source-card a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .local-source-card a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .source-grid {
+                grid-template-columns: 1fr;
+            }
+            .local-region-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 보도자료 출처 목록</h1>
+            <p>중앙정부 및 지자체 보도자료 배포 사이트</p>
+            <div class="nav-buttons">
+                <a href="press-release.html" class="btn-back">← 보도자료 관리</a>
+                <a href="index.html" class="btn-back">← 관리자 메인</a>
+            </div>
+        </div>
+
+        <!-- 통계 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="label">통합 포털</div>
+                <div class="value">1</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">중앙부처</div>
+                <div class="value" id="centralCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">광역시도</div>
+                <div class="value" id="metroCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">총 출처</div>
+                <div class="value" id="totalCount">0</div>
+            </div>
+        </div>
+
+        <!-- 통합 포털 -->
+        <div class="section">
+            <h2>🏛️ 통합 보도자료 포털</h2>
+            <div class="section-intro">
+                <p>대한민국 정부의 모든 보도자료를 통합 검색할 수 있는 공식 포털입니다.</p>
+            </div>
+            <div class="source-grid">
+                <div class="source-card">
+                    <h3>
+                        <span class="icon">🇰🇷</span>
+                        대한민국 정책브리핑
+                        <span class="badge portal">통합</span>
+                    </h3>
+                    <a href="https://www.korea.kr/briefing/pressReleaseList.do" target="_blank">
+                        보도자료 바로가기 →
+                    </a>
+                    <div class="description">
+                        문화체육관광부 운영, 모든 부처 보도자료 통합 제공
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 중앙정부 -->
+        <div class="section">
+            <h2>🏢 중앙정부 부처 (18개 부)</h2>
+            <div class="section-intro">
+                <p>대한민국 중앙행정기관의 보도자료 배포 페이지입니다.</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchCentral" placeholder="부처명 검색...">
+            </div>
+            <div class="source-grid" id="centralGrid"></div>
+        </div>
+
+        <!-- 광역시도 -->
+        <div class="section">
+            <h2>🗺️ 광역시도 (17개)</h2>
+            <div class="section-intro">
+                <p>전국 17개 광역시도의 보도자료 배포 페이지입니다.</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchMetro" placeholder="지역명 검색...">
+            </div>
+            <div class="source-grid" id="metroGrid"></div>
+        </div>
+
+        <!-- 기초자치단체 -->
+        <div class="section">
+            <h2>🏘️ 기초자치단체 (226개)</h2>
+            <div class="section-intro">
+                <p>전국 226개 기초자치단체(시/군/구)의 보도자료 배포 페이지입니다. 광역시도를 클릭하면 하위 지자체 목록이 펼쳐집니다.</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchLocal" placeholder="시/군/구명 검색...">
+            </div>
+            <div id="localGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        // 중앙정부 부처 데이터
+        const centralSources = [
+            { name: '기획재정부', url: 'https://www.moef.go.kr/nw/nes/nesdta.do?bbsId=MOSFBBS_000000000028&menuNo=4010100', icon: '💰' },
+            { name: '교육부', url: 'https://www.moe.go.kr/boardCnts/list.do?boardID=294&m=0503&s=moe', icon: '📚' },
+            { name: '과학기술정보통신부', url: 'https://www.msit.go.kr/bbs/list.do?sCode=user&mId=113&mPid=112', icon: '🔬' },
+            { name: '외교부', url: 'https://www.mofa.go.kr/www/brd/m_4080/list.do', icon: '🌏' },
+            { name: '통일부', url: 'https://www.unikorea.go.kr/unikorea/business/NKNews/BoardList/?boardId=bbs_0000000000000001', icon: '🤝' },
+            { name: '법무부', url: 'https://www.moj.go.kr/moj/221/subview.do', icon: '⚖️' },
+            { name: '국방부', url: 'https://www.mnd.go.kr/mbshome/mbs/mnd/subview.do?id=mnd_010701000000', icon: '🛡️' },
+            { name: '행정안전부', url: 'https://www.mois.go.kr/frt/bbs/type010/commonSelectBoardList.do?bbsId=BBSMSTR_000000000008', icon: '🏛️' },
+            { name: '문화체육관광부', url: 'https://www.mcst.go.kr/kor/s_notice/press/pressMain.jsp', icon: '🎭' },
+            { name: '농림축산식품부', url: 'https://www.mafra.go.kr/mafra/1130/subview.do', icon: '🌾' },
+            { name: '산업통상자원부', url: 'https://www.motie.go.kr/kor/article/ATCL3f49a5a8c', icon: '🏭' },
+            { name: '보건복지부', url: 'https://www.mohw.go.kr/board.es?mid=a10503000000&bid=0027', icon: '🏥' },
+            { name: '환경부', url: 'https://www.me.go.kr/home/web/board/list.do?menuId=286&boardId=148020', icon: '🌿' },
+            { name: '고용노동부', url: 'https://www.moel.go.kr/news/enews/report/enewsView.do?news_seq=15514', icon: '💼' },
+            { name: '여성가족부', url: 'https://www.mogef.go.kr/nw/enw/nw_enw_s001.do', icon: '👨‍👩‍👧‍👦' },
+            { name: '국토교통부', url: 'https://www.molit.go.kr/USR/NEWS/m_71/lst.jsp', icon: '🏗️' },
+            { name: '해양수산부', url: 'https://www.mof.go.kr/board.do?menuKey=376&boardKey=10', icon: '🚢' },
+            { name: '중소벤처기업부', url: 'https://www.mss.go.kr/site/smba/ex/bbs/List.do?cbIdx=86', icon: '🚀' }
+        ];
+
+        // 광역시도 데이터
+        const metroSources = [
+            { name: '서울특별시', url: 'https://opengov.seoul.go.kr/press/list', icon: '🏙️' },
+            { name: '부산광역시', url: 'https://www.busan.go.kr/nbtnewsBU', icon: '🌊' },
+            { name: '대구광역시', url: 'https://www.daegu.go.kr/dgcity/index.do?menu_id=00936066', icon: '🍎' },
+            { name: '인천광역시', url: 'https://www.incheon.go.kr/news/NEWS060101', icon: '✈️' },
+            { name: '광주광역시', url: 'https://www.gwangju.go.kr/contentsView.do?pageId=www144', icon: '🎨' },
+            { name: '대전광역시', url: 'https://www.daejeon.go.kr/drh/drhBoardList.do?menuSeq=1510&boardId=press_release', icon: '🔬' },
+            { name: '울산광역시', url: 'https://www.ulsan.go.kr/u/rep/news-briefing', icon: '⚙️' },
+            { name: '세종특별자치시', url: 'https://www.sejong.go.kr/bbs/R0002.do', icon: '🌳' },
+            { name: '경기도', url: 'https://www.gg.go.kr/bbs/boardList.do?bIdx=23&menuId=1535', icon: '🏘️' },
+            { name: '강원특별자치도', url: 'https://www.gwd.go.kr/www/selectBbsNttList.do?bbsNo=136&key=2219', icon: '⛰️' },
+            { name: '충청북도', url: 'https://www.chungbuk.go.kr/www/selectBbsNttList.do?bbsNo=83&key=1549', icon: '🌄' },
+            { name: '충청남도', url: 'https://www.chungnam.go.kr/cnnet/board.do?mnu_cd=CNNMENU00226', icon: '🌾' },
+            { name: '전북특별자치도', url: 'https://www.jeonbuk.go.kr/index.jeonbuk?menuCd=DOM_000000102003002000', icon: '🌿' },
+            { name: '전라남도', url: 'https://www.jeonnam.go.kr/M6756', icon: '🌊' },
+            { name: '경상북도', url: 'https://www.gb.go.kr/Main/open_contents/section/wel/page.do?mnu_uid=5226&', icon: '🏔️' },
+            { name: '경상남도', url: 'https://www.gyeongnam.go.kr/index.gyeong?menuCd=DOM_000000104003001000', icon: '🌸' },
+            { name: '제주특별자치도', url: 'https://www.jeju.go.kr/news/bodo/list.htm', icon: '🌺' }
+        ];
+
+        // 렌더링 함수
+        function renderSources(sources, gridId, searchId) {
+            const grid = document.getElementById(gridId);
+            const searchInput = document.getElementById(searchId);
+
+            function render(filteredSources = sources) {
+                grid.innerHTML = filteredSources.map(source => `
+                    <div class="source-card">
+                        <h3>
+                            <span class="icon">${source.icon}</span>
+                            ${source.name}
+                            <span class="badge ${gridId === 'centralGrid' ? 'central' : 'metro'}">
+                                ${gridId === 'centralGrid' ? '중앙' : '지방'}
+                            </span>
+                        </h3>
+                        <a href="${source.url}" target="_blank">
+                            보도자료 바로가기 →
+                        </a>
+                    </div>
+                `).join('');
+            }
+
+            // 검색 기능
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.toLowerCase();
+                const filtered = sources.filter(source =>
+                    source.name.toLowerCase().includes(keyword)
+                );
+                render(filtered);
+            });
+
+            render();
+        }
+
+        // 초기화
+        renderSources(centralSources, 'centralGrid', 'searchCentral');
+        renderSources(metroSources, 'metroGrid', 'searchMetro');
+
+        // 기초자치단체 데이터 (광역시도별)
+        const localSources = {
+            '서울특별시': [
+                { name: '종로구', url: 'https://www.jongno.go.kr/portalMain.do' },
+                { name: '중구', url: 'https://www.junggu.seoul.kr/index.jsp' },
+                { name: '용산구', url: 'https://www.yongsan.go.kr/index.jsp' },
+                { name: '성동구', url: 'https://www.sd.go.kr/sd/index.do' },
+                { name: '광진구', url: 'https://www.gwangjin.go.kr/portal/main.do' },
+                { name: '동대문구', url: 'https://www.ddm.go.kr/www/index.do' },
+                { name: '중랑구', url: 'https://www.jungnang.go.kr/portal/main.do' },
+                { name: '성북구', url: 'https://www.sb.go.kr/Main.do' },
+                { name: '강북구', url: 'https://www.gangbuk.go.kr/www/index.do' },
+                { name: '도봉구', url: 'https://www.dobong.go.kr/www/index.do' },
+                { name: '노원구', url: 'https://www.nowon.kr/www/index.do' },
+                { name: '은평구', url: 'https://www.ep.go.kr/www/index.do' },
+                { name: '서대문구', url: 'https://www.sdm.go.kr/main/index.do' },
+                { name: '마포구', url: 'https://www.mapo.go.kr/site/main/home' },
+                { name: '양천구', url: 'https://www.yangcheon.go.kr/site/main/home' },
+                { name: '강서구', url: 'https://www.gangseo.seoul.kr/index.jsp' },
+                { name: '구로구', url: 'https://www.guro.go.kr/www/index.do' },
+                { name: '금천구', url: 'https://www.geumcheon.go.kr/portal/main.do' },
+                { name: '영등포구', url: 'https://www.ydp.go.kr/www/index.do' },
+                { name: '동작구', url: 'https://www.dongjak.go.kr/portal/main.do' },
+                { name: '관악구', url: 'https://www.gwanak.go.kr/site/gwanak/main.do' },
+                { name: '서초구', url: 'https://www.seocho.go.kr/site/seocho/main.do' },
+                { name: '강남구', url: 'https://www.gangnam.go.kr/office/index.do' },
+                { name: '송파구', url: 'https://www.songpa.go.kr/www/index.do' },
+                { name: '강동구', url: 'https://www.gangdong.go.kr/web/newmain/index.do' }
+            ],
+            '부산광역시': [
+                { name: '중구', url: 'https://www.bsjunggu.go.kr/index.bsjunggu' },
+                { name: '서구', url: 'https://www.bsseogu.go.kr/index.bsseogu' },
+                { name: '동구', url: 'https://www.bsdonggu.go.kr/index.bsdonggu' },
+                { name: '영도구', url: 'https://www.yeongdo.go.kr/index.yeongdo' },
+                { name: '부산진구', url: 'https://www.busanjin.go.kr/index.busanjin' },
+                { name: '동래구', url: 'https://www.dongnae.go.kr/index.dongnae' },
+                { name: '남구', url: 'https://www.bsnamgu.go.kr/index.bsnamgu' },
+                { name: '북구', url: 'https://www.bsbukgu.go.kr/index.bsbukgu' },
+                { name: '해운대구', url: 'https://www.haeundae.go.kr/index.haeundae' },
+                { name: '사하구', url: 'https://www.saha.go.kr/index.saha' },
+                { name: '금정구', url: 'https://www.geumjeong.go.kr/index.geumjeong' },
+                { name: '강서구', url: 'https://www.bsgangseo.go.kr/index.bsgangseo' },
+                { name: '연제구', url: 'https://www.yeonje.go.kr/index.yeonje' },
+                { name: '수영구', url: 'https://www.suyeong.go.kr/index.suyeong' },
+                { name: '사상구', url: 'https://www.sasang.go.kr/index.sasang' },
+                { name: '기장군', url: 'https://www.gijang.go.kr/index.gijang' }
+            ],
+            '대구광역시': [
+                { name: '중구', url: 'https://www.jung.daegu.kr/new/index.do' },
+                { name: '동구', url: 'https://www.dong.daegu.kr/index.do' },
+                { name: '서구', url: 'https://www.dgs.go.kr/index.do' },
+                { name: '남구', url: 'https://www.nam.daegu.kr/index.do' },
+                { name: '북구', url: 'https://www.bukgu.daegu.kr/index.do' },
+                { name: '수성구', url: 'https://www.suseong.kr/index.do' },
+                { name: '달서구', url: 'https://www.dalseo.daegu.kr/index.do' },
+                { name: '달성군', url: 'https://www.dalseong.daegu.kr/index.do' },
+                { name: '군위군', url: 'https://www.gunwi.go.kr/index.gunwi' }
+            ],
+            '인천광역시': [
+                { name: '중구', url: 'https://www.icjg.go.kr/index.do' },
+                { name: '동구', url: 'https://www.icdonggu.go.kr/index.do' },
+                { name: '미추홀구', url: 'https://www.michuhol.go.kr/index.do' },
+                { name: '연수구', url: 'https://www.yeonsu.go.kr/index.do' },
+                { name: '남동구', url: 'https://www.namdong.go.kr/index.do' },
+                { name: '부평구', url: 'https://www.icbp.go.kr/index.do' },
+                { name: '계양구', url: 'https://www.gyeyang.go.kr/index.do' },
+                { name: '서구', url: 'https://www.seo.incheon.kr/index.do' },
+                { name: '강화군', url: 'https://www.ganghwa.go.kr/open_content/main/' },
+                { name: '옹진군', url: 'https://www.ongjin.go.kr/open_content/main/' }
+            ],
+            '광주광역시': [
+                { name: '동구', url: 'https://www.donggu.kr/00_main/main.do' },
+                { name: '서구', url: 'https://www.seo.gwangju.kr/index.do' },
+                { name: '남구', url: 'https://www.namgu.gwangju.kr/index.do' },
+                { name: '북구', url: 'https://www.bukgu.gwangju.kr/index.do' },
+                { name: '광산구', url: 'https://www.gwangsan.go.kr/index.do' }
+            ],
+            '대전광역시': [
+                { name: '동구', url: 'https://www.donggu.go.kr/dg/index.do' },
+                { name: '중구', url: 'https://www.djjunggu.go.kr/index.do' },
+                { name: '서구', url: 'https://www.daejeonseo.go.kr/index.do' },
+                { name: '유성구', url: 'https://www.yuseong.go.kr/index.do' },
+                { name: '대덕구', url: 'https://www.daedeok.go.kr/index.do' }
+            ],
+            '울산광역시': [
+                { name: '중구', url: 'https://www.junggu.ulsan.kr/index.do' },
+                { name: '남구', url: 'https://www.ulsannamgu.go.kr/index.do' },
+                { name: '동구', url: 'https://www.donggu.ulsan.kr/index.do' },
+                { name: '북구', url: 'https://www.bukgu.ulsan.kr/index.do' },
+                { name: '울주군', url: 'https://www.ulju.ulsan.kr/index.ulju' }
+            ],
+            '경기도': [
+                { name: '수원시', url: 'https://www.suwon.go.kr/index.do' },
+                { name: '성남시', url: 'https://www.seongnam.go.kr/city/index.do' },
+                { name: '고양시', url: 'https://www.goyang.go.kr/www/index.do' },
+                { name: '용인시', url: 'https://www.yongin.go.kr/main.do' },
+                { name: '부천시', url: 'https://www.bucheon.go.kr/site/main/home' },
+                { name: '안산시', url: 'https://www.iansan.net/main.do' },
+                { name: '안양시', url: 'https://www.anyang.go.kr/main/main.do' },
+                { name: '남양주시', url: 'https://www.nyj.go.kr/main.do' },
+                { name: '화성시', url: 'https://www.hscity.go.kr/main.do' },
+                { name: '평택시', url: 'https://www.pyeongtaek.go.kr/index.do' },
+                { name: '의정부시', url: 'https://www.ui4u.go.kr/www/index.do' },
+                { name: '시흥시', url: 'https://www.siheung.go.kr/main.do' },
+                { name: '파주시', url: 'https://www.paju.go.kr/www/index.do' },
+                { name: '김포시', url: 'https://www.gimpo.go.kr/portal/main.do' },
+                { name: '광명시', url: 'https://www.gm.go.kr/pt/main.do' },
+                { name: '광주시', url: 'https://www.gjcity.go.kr/main.do' },
+                { name: '군포시', url: 'https://www.gunpo.go.kr/www/index.do' },
+                { name: '하남시', url: 'https://www.hanam.go.kr/www/index.do' },
+                { name: '오산시', url: 'https://www.osan.go.kr/portal/main.do' },
+                { name: '양주시', url: 'https://www.yangju.go.kr/main.do' },
+                { name: '이천시', url: 'https://www.icheon.go.kr/main.do' },
+                { name: '구리시', url: 'https://www.guri.go.kr/main.do' },
+                { name: '안성시', url: 'https://www.anseong.go.kr/main.do' },
+                { name: '포천시', url: 'https://www.pocheon.go.kr/www/index.do' },
+                { name: '의왕시', url: 'https://www.uiwang.go.kr/portal/main.do' },
+                { name: '양평군', url: 'https://www.yp21.go.kr/www/index.do' },
+                { name: '여주시', url: 'https://www.yeoju.go.kr/www/index.do' },
+                { name: '동두천시', url: 'https://www.ddc.go.kr/www/index.do' },
+                { name: '가평군', url: 'https://www.gp.go.kr/portal/main.do' },
+                { name: '과천시', url: 'https://www.gccity.go.kr/main.do' },
+                { name: '연천군', url: 'https://www.yeoncheon.go.kr/www/index.do' }
+            ],
+            '강원특별자치도': [
+                { name: '춘천시', url: 'https://www.chuncheon.go.kr/www/index.do' },
+                { name: '원주시', url: 'https://www.wonju.go.kr/www/index.do' },
+                { name: '강릉시', url: 'https://www.gn.go.kr/www/index.do' },
+                { name: '동해시', url: 'https://www.dh.go.kr/www/index.do' },
+                { name: '태백시', url: 'https://www.taebaek.go.kr/main.taebaek' },
+                { name: '속초시', url: 'https://www.sokcho.go.kr/www/index.do' },
+                { name: '삼척시', url: 'https://www.samcheok.go.kr/index.samcheok' },
+                { name: '홍천군', url: 'https://www.hongcheon.go.kr/www/index.do' },
+                { name: '횡성군', url: 'https://www.hsg.go.kr/www/index.do' },
+                { name: '영월군', url: 'https://www.yw.go.kr/www/index.do' },
+                { name: '평창군', url: 'https://www.pc.go.kr/www/index.do' },
+                { name: '정선군', url: 'https://www.jeongseon.go.kr/index.jeongseon' },
+                { name: '철원군', url: 'https://www.cwg.go.kr/www/index.do' },
+                { name: '화천군', url: 'https://www.ihc.go.kr/www/index.do' },
+                { name: '양구군', url: 'https://www.yanggu.go.kr/www/index.do' },
+                { name: '인제군', url: 'https://www.inje.go.kr/www/index.do' },
+                { name: '고성군', url: 'https://www.goseong.go.kr/index.goseong' },
+                { name: '양양군', url: 'https://www.yangyang.go.kr/index.yangyang' }
+            ],
+            '충청북도': [
+                { name: '청주시', url: 'https://www.cheongju.go.kr/www/index.do' },
+                { name: '충주시', url: 'https://www.chungju.go.kr/www/index.do' },
+                { name: '제천시', url: 'https://www.jecheon.go.kr/www/index.do' },
+                { name: '보은군', url: 'https://www.boeun.go.kr/www/index.do' },
+                { name: '옥천군', url: 'https://www.okcheon.go.kr/www/index.do' },
+                { name: '영동군', url: 'https://www.yd21.go.kr/www/index.do' },
+                { name: '증평군', url: 'https://www.jeungpyeong.go.kr/www/index.do' },
+                { name: '진천군', url: 'https://www.jincheon.go.kr/www/index.do' },
+                { name: '괴산군', url: 'https://www.goesan.go.kr/www/index.do' },
+                { name: '음성군', url: 'https://www.eumseong.go.kr/www/index.do' },
+                { name: '단양군', url: 'https://www.dy21.go.kr/index.danyang' }
+            ],
+            '충청남도': [
+                { name: '천안시', url: 'https://www.cheonan.go.kr/kr/index.do' },
+                { name: '공주시', url: 'https://www.gongju.go.kr/kr/index.do' },
+                { name: '보령시', url: 'https://www.brcn.go.kr/www/index.do' },
+                { name: '아산시', url: 'https://www.asan.go.kr/main.do' },
+                { name: '서산시', url: 'https://www.seosan.go.kr/main.do' },
+                { name: '논산시', url: 'https://www.nonsan.go.kr/index.do' },
+                { name: '계룡시', url: 'https://www.gyeryong.go.kr/prog/lmMain/main.do' },
+                { name: '당진시', url: 'https://www.dangjin.go.kr/index.do' },
+                { name: '금산군', url: 'https://www.geumsan.go.kr/index.do' },
+                { name: '부여군', url: 'https://www.buyeo.go.kr/index.buyeo' },
+                { name: '서천군', url: 'https://www.seocheon.go.kr/www.seocheon' },
+                { name: '청양군', url: 'https://www.cheongyang.go.kr/index.do' },
+                { name: '홍성군', url: 'https://www.hongseong.go.kr/www/index.do' },
+                { name: '예산군', url: 'https://www.yesan.go.kr/main.do' },
+                { name: '태안군', url: 'https://www.taean.go.kr/kor.do' }
+            ],
+            '전북특별자치도': [
+                { name: '전주시', url: 'https://www.jeonju.go.kr/index.jeonju' },
+                { name: '군산시', url: 'https://www.gunsan.go.kr/index.gunsan' },
+                { name: '익산시', url: 'https://www.iksan.go.kr/index.iksan' },
+                { name: '정읍시', url: 'https://www.jeongeup.go.kr/index.jeongeup' },
+                { name: '남원시', url: 'https://www.namwon.go.kr/index.namwon' },
+                { name: '김제시', url: 'https://www.gimje.go.kr/index.gimje' },
+                { name: '완주군', url: 'https://www.wanju.go.kr/index.wanju' },
+                { name: '진안군', url: 'https://www.jinan.go.kr/index.jinan' },
+                { name: '무주군', url: 'https://www.muju.go.kr/index.muju' },
+                { name: '장수군', url: 'https://www.jangsu.go.kr/index.jangsu' },
+                { name: '임실군', url: 'https://www.imsil.go.kr/index.imsil' },
+                { name: '순창군', url: 'https://www.sunchang.go.kr/index.sunchang' },
+                { name: '고창군', url: 'https://www.gochang.go.kr/index.gochang' },
+                { name: '부안군', url: 'https://www.buan.go.kr/index.buan' }
+            ],
+            '전라남도': [
+                { name: '목포시', url: 'https://www.mokpo.go.kr/www/index.do' },
+                { name: '여수시', url: 'https://www.yeosu.go.kr/www/index.do' },
+                { name: '순천시', url: 'https://www.suncheon.go.kr/www/index.do' },
+                { name: '나주시', url: 'https://www.naju.go.kr/www/index.do' },
+                { name: '광양시', url: 'https://www.gwangyang.go.kr/www/index.do' },
+                { name: '담양군', url: 'https://www.damyang.go.kr/www/index.do' },
+                { name: '곡성군', url: 'https://www.gokseong.go.kr/www/index.do' },
+                { name: '구례군', url: 'https://www.gurye.go.kr/www/index.do' },
+                { name: '고흥군', url: 'https://www.goheung.go.kr/www/index.do' },
+                { name: '보성군', url: 'https://www.boseong.go.kr/www/index.do' },
+                { name: '화순군', url: 'https://www.hwasun.go.kr/www/index.do' },
+                { name: '장흥군', url: 'https://www.jangheung.go.kr/www/index.do' },
+                { name: '강진군', url: 'https://www.gangjin.go.kr/www/index.do' },
+                { name: '해남군', url: 'https://www.haenam.go.kr/www/index.do' },
+                { name: '영암군', url: 'https://www.yeongam.go.kr/www/index.do' },
+                { name: '무안군', url: 'https://www.muan.go.kr/www/index.do' },
+                { name: '함평군', url: 'https://www.hampyeong.go.kr/www/index.do' },
+                { name: '영광군', url: 'https://www.yeonggwang.go.kr/www/index.do' },
+                { name: '장성군', url: 'https://www.jangseong.go.kr/www/index.do' },
+                { name: '완도군', url: 'https://www.wando.go.kr/www/index.do' },
+                { name: '진도군', url: 'https://www.jindo.go.kr/www/index.do' },
+                { name: '신안군', url: 'https://www.shinan.go.kr/www/index.do' }
+            ],
+            '경상북도': [
+                { name: '포항시', url: 'https://www.pohang.go.kr/pohang/index.do' },
+                { name: '경주시', url: 'https://www.gyeongju.go.kr/open_content/main/' },
+                { name: '김천시', url: 'https://www.gimcheon.go.kr/main.do' },
+                { name: '안동시', url: 'https://www.andong.go.kr/main.do' },
+                { name: '구미시', url: 'https://www.gumi.go.kr/main.do' },
+                { name: '영주시', url: 'https://www.yeongju.go.kr/main.do' },
+                { name: '영천시', url: 'https://www.yc.go.kr/main.do' },
+                { name: '상주시', url: 'https://www.sangju.go.kr/www/index.do' },
+                { name: '문경시', url: 'https://www.gbmg.go.kr/www/index.do' },
+                { name: '경산시', url: 'https://www.gys.go.kr/main.do' },
+                { name: '의성군', url: 'https://www.uiseong.go.kr/www/index.do' },
+                { name: '청송군', url: 'https://www.cs.go.kr/www/index.do' },
+                { name: '영양군', url: 'https://www.yyg.go.kr/www/index.do' },
+                { name: '영덕군', url: 'https://www.yd.go.kr/www/index.do' },
+                { name: '청도군', url: 'https://www.cheongdo.go.kr/www/index.do' },
+                { name: '고령군', url: 'https://www.goryeong.go.kr/www/index.do' },
+                { name: '성주군', url: 'https://www.sj.go.kr/www/index.do' },
+                { name: '칠곡군', url: 'https://www.chilgok.go.kr/www/index.do' },
+                { name: '예천군', url: 'https://www.yecheon.go.kr/www/index.do' },
+                { name: '봉화군', url: 'https://www.bonghwa.go.kr/www/index.do' },
+                { name: '울진군', url: 'https://www.uljin.go.kr/www/index.do' },
+                { name: '울릉군', url: 'https://www.ulleung.go.kr/www/index.do' }
+            ],
+            '경상남도': [
+                { name: '창원시', url: 'https://www.changwon.go.kr/cwportal/main/main.do' },
+                { name: '진주시', url: 'https://www.jinju.go.kr/00253/00259/00260.web' },
+                { name: '통영시', url: 'https://www.tongyeong.go.kr/www/index.do' },
+                { name: '사천시', url: 'https://www.sacheon.go.kr/www/index.do' },
+                { name: '김해시', url: 'https://www.gimhae.go.kr/main.do' },
+                { name: '밀양시', url: 'https://www.miryang.go.kr/www/index.do' },
+                { name: '거제시', url: 'https://www.geoje.go.kr/index.geoje' },
+                { name: '양산시', url: 'https://www.yangsan.go.kr/main.do' },
+                { name: '의령군', url: 'https://www.uiryeong.go.kr/www/index.do' },
+                { name: '함안군', url: 'https://www.haman.go.kr/www/index.do' },
+                { name: '창녕군', url: 'https://www.cng.go.kr/www/index.do' },
+                { name: '고성군', url: 'https://www.goseong.go.kr/www/index.do' },
+                { name: '남해군', url: 'https://www.namhae.go.kr/www/index.do' },
+                { name: '하동군', url: 'https://www.hadong.go.kr/www/index.do' },
+                { name: '산청군', url: 'https://www.sancheong.go.kr/www/index.do' },
+                { name: '함양군', url: 'https://www.hygn.go.kr/www/index.do' },
+                { name: '거창군', url: 'https://www.geochang.go.kr/www/index.do' },
+                { name: '합천군', url: 'https://www.hc.go.kr/www/index.do' }
+            ],
+            '제주특별자치도': [
+                { name: '제주시', url: 'https://www.jejusi.go.kr/index.htm' },
+                { name: '서귀포시', url: 'https://www.seogwipo.go.kr/index.htm' }
+            ]
+        };
+
+        // 기초자치단체 렌더링
+        function renderLocalSources() {
+            const grid = document.getElementById('localGrid');
+            const searchInput = document.getElementById('searchLocal');
+            let allLocalCount = 0;
+
+            Object.keys(localSources).forEach(region => {
+                allLocalCount += localSources[region].length;
+            });
+
+            function render(searchKeyword = '') {
+                let html = '';
+                let filteredCount = 0;
+
+                Object.keys(localSources).forEach(region => {
+                    const items = localSources[region];
+                    const filteredItems = searchKeyword
+                        ? items.filter(item => item.name.includes(searchKeyword))
+                        : items;
+
+                    if (filteredItems.length === 0 && searchKeyword) return;
+                    filteredCount += filteredItems.length;
+
+                    const regionId = region.replace(/\s/g, '');
+                    html += `
+                        <div class="local-region">
+                            <div class="local-region-header" onclick="toggleRegion('${regionId}')">
+                                <h3>
+                                    ${region}
+                                    <span class="count">${filteredItems.length}</span>
+                                </h3>
+                                <span class="toggle" id="toggle-${regionId}">▼</span>
+                            </div>
+                            <div class="local-region-content" id="content-${regionId}">
+                                <div class="local-region-grid">
+                                    ${filteredItems.map(item => `
+                                        <div class="local-source-card">
+                                            <h4>${item.name}</h4>
+                                            <a href="${item.url}" target="_blank">
+                                                홈페이지 →
+                                            </a>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                grid.innerHTML = html;
+            }
+
+            // 검색 기능
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.trim();
+                render(keyword);
+            });
+
+            render();
+            return allLocalCount;
+        }
+
+        // 지역 토글
+        window.toggleRegion = function(regionId) {
+            const header = document.querySelector(`#toggle-${regionId}`).parentElement;
+            const content = document.getElementById(`content-${regionId}`);
+            const toggle = document.getElementById(`toggle-${regionId}`);
+
+            header.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+        };
+
+        // 통계 업데이트
+        const localCount = renderLocalSources();
+        document.getElementById('centralCount').textContent = centralSources.length;
+        document.getElementById('metroCount').textContent = metroSources.length;
+        document.getElementById('totalCount').textContent = 1 + centralSources.length + metroSources.length + localCount;
+    </script>
+</body>
+</html>

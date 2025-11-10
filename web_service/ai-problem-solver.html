@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 문제풀이 - 잼쌤</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="history.back()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+                </svg>
+            </button>
+            <h1 class="page-title">AI 문제풀이</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 소개 카드 -->
+        <div class="intro-card green-gradient" style="margin-bottom: 24px;">
+            <div class="intro-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+                </svg>
+            </div>
+            <div class="intro-content">
+                <h2>문제 사진만 찍으면 OK!</h2>
+                <p>AI가 문제를 분석하고 상세한 해설을 제공합니다</p>
+                <p style="font-size: 0.75em; margin-top: 8px; opacity: 0.9;">🎁 하루 3회 무료 제공</p>
+            </div>
+        </div>
+
+        <!-- 이미지 업로드 -->
+        <div class="input-card">
+            <div class="input-label">문제 사진 업로드</div>
+            <div class="upload-box" id="uploadBox">
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                <div class="upload-placeholder" id="placeholder">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="#9CA3AF">
+                        <path d="M9 2L7.17 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4H16.83L15 2H9M12 7C14.76 7 17 9.24 17 12S14.76 17 12 17 7 14.76 7 12 9.24 7 12 7M12 9C10.34 9 9 10.34 9 12S10.34 15 12 15 15 13.66 15 12 13.66 9 12 9Z"/>
+                    </svg>
+                    <p>문제가 보이는 사진을 업로드하세요</p>
+                    <small style="color: #9CA3AF; margin-top: 8px;">JPG, PNG 형식 지원</small>
+                </div>
+                <img id="previewImage" style="display: none; width: 100%; height: 100%; object-fit: contain; border-radius: 8px;">
+            </div>
+        </div>
+
+        <!-- 과목 선택 (선택사항) -->
+        <div class="input-card">
+            <div class="input-label">과목 선택 (선택사항)</div>
+            <select id="subjectSelect" class="select-input">
+                <option value="">자동 인식</option>
+                <option value="수학">수학</option>
+                <option value="영어">영어</option>
+                <option value="국어">국어</option>
+                <option value="과학">과학</option>
+                <option value="사회">사회</option>
+                <option value="기타">기타</option>
+            </select>
+        </div>
+
+        <!-- 분석 버튼 -->
+        <button class="generate-button" id="analyzeBtn" disabled>
+            <svg id="analyzeIcon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 3L1 9L12 15L21 10.09V17H23V9M5 13.18V17.18L12 21L19 17.18V13.18L12 17L5 13.18Z"/>
+            </svg>
+            <span id="analyzeText">문제 분석하기</span>
+            <div class="spinner" id="spinner" style="display: none;"></div>
+        </button>
+
+        <!-- 결과 카드 -->
+        <div class="result-card" id="resultCard" style="display: none;">
+            <div class="result-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#10B981">
+                    <path d="M9 16.17L4.83 12L3.41 13.41L9 19L21 7L19.59 5.59L9 16.17Z"/>
+                </svg>
+                <span style="color: #10B981; font-weight: 600;">분석 완료!</span>
+            </div>
+
+            <!-- 다운로드용 컨테이너 -->
+            <div id="downloadContainer" style="background: white; padding: 16px 8px; border-radius: 12px; margin-top: 20px;">
+                <!-- 원본 문제 사진 -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.1em; font-weight: 700; color: #1F2937; margin-bottom: 12px;">📸 원본 문제</h3>
+                    <img id="originalProblemImage" style="width: 100%; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+
+                <!-- 문제 내용 -->
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 1.1em; font-weight: 700; color: #1F2937; margin-bottom: 12px;">📋 문제</h3>
+                <div id="problemText" style="padding: 12px 8px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; white-space: pre-wrap;"></div>
+            </div>
+
+            <!-- 정답 -->
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 1.1em; font-weight: 700; color: #1F2937; margin-bottom: 12px;">✅ 정답</h3>
+                <div id="answerText" style="padding: 12px 8px; background: #ECFDF5; border-radius: 8px; color: #065F46; font-weight: 600; font-size: 1.1em;"></div>
+            </div>
+
+            <!-- 해설 -->
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 1.1em; font-weight: 700; color: #1F2937; margin-bottom: 12px;">💡 해설</h3>
+                <div id="explanationText" style="padding: 12px 8px; background: #F9FAFB; border-radius: 8px; line-height: 1.8; white-space: pre-wrap;"></div>
+            </div>
+
+            <!-- 개념 설명 -->
+            <div style="margin-top: 20px;">
+                <h3 style="font-size: 1.1em; font-weight: 700; color: #1F2937; margin-bottom: 12px;">📚 핵심 개념</h3>
+                <div id="conceptText" style="padding: 12px 8px; background: #FEF3C7; border-radius: 8px; line-height: 1.8; white-space: pre-wrap;"></div>
+            </div>
+            </div>
+
+            <!-- 다운로드 및 다시 풀기 버튼 -->
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="download-button" id="downloadBtn" style="flex: 1; background: #6366F1;">
+                    📥 해설 다운로드
+                </button>
+                <button class="download-button" id="retryBtn" style="flex: 1; background: #10B981;">
+                    🔄 다른 문제 풀이
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .intro-card {
+            padding: 20px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .intro-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .intro-content h2 {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .intro-content p {
+            font-size: 0.875em;
+            color: white;
+            font-weight: 500;
+        }
+
+        .upload-box {
+            background: #F9FAFB;
+            border: 2px dashed #D1D5DB;
+            border-radius: 12px;
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+            min-height: 300px;
+        }
+
+        .upload-box:hover {
+            border-color: #10B981;
+            background: #ECFDF5;
+        }
+
+        .upload-box.uploaded {
+            border-color: #10B981;
+            border-style: solid;
+            padding: 0;
+        }
+
+        .upload-placeholder {
+            text-align: center;
+            color: #6B7280;
+        }
+
+        .upload-placeholder svg {
+            margin: 0 auto 12px;
+        }
+
+        .upload-placeholder p {
+            margin-top: 12px;
+            font-size: 0.875em;
+            font-weight: 500;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .select-input:focus {
+            outline: none;
+            border-color: #10B981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .download-button {
+            width: 100%;
+            padding: 12px;
+            background: #10B981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.2s;
+        }
+
+        .download-button:hover {
+            background: #059669;
+        }
+    </style>
+
+    <script>
+        let selectedImage = null;
+
+        // 하루 사용 제한 체크
+        function checkDailyLimit() {
+            const today = new Date().toDateString();
+            const lastUsedDate = localStorage.getItem('ai_solver_last_used');
+            const usageCount = parseInt(localStorage.getItem('ai_solver_usage_count') || '0');
+
+            // 날짜가 바뀌었으면 카운트 초기화
+            if (lastUsedDate !== today) {
+                localStorage.setItem('ai_solver_last_used', today);
+                localStorage.setItem('ai_solver_usage_count', '0');
+                return true;
+            }
+
+            // 오늘 이미 3회 사용했으면 제한
+            if (usageCount >= 3) {
+                return false;
+            }
+
+            return true;
+        }
+
+        function incrementUsageCount() {
+            const count = parseInt(localStorage.getItem('ai_solver_usage_count') || '0');
+            localStorage.setItem('ai_solver_usage_count', (count + 1).toString());
+        }
+
+        function getRemainingTime() {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            const diff = tomorrow - now;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            return `${hours}시간 ${minutes}분`;
+        }
+
+        // 이미지 업로드 처리
+        const uploadBox = document.getElementById('uploadBox');
+        const fileInput = document.getElementById('fileInput');
+        const previewImage = document.getElementById('previewImage');
+        const placeholder = document.getElementById('placeholder');
+
+        uploadBox.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    selectedImage = e.target.result;
+                    previewImage.src = selectedImage;
+                    previewImage.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    uploadBox.classList.add('uploaded');
+                    document.getElementById('analyzeBtn').disabled = false;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 문제 분석 실행
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            if (!selectedImage) {
+                alert('문제 사진을 업로드해주세요.');
+                return;
+            }
+
+            // 하루 사용 제한 체크
+            if (!checkDailyLimit()) {
+                const remaining = getRemainingTime();
+                alert(`⏰ 하루 3회 무료 사용 제한\n\n오늘 이미 3회 사용하셨습니다.\n다음 이용까지: ${remaining} 남음\n\n내일 자정(00:00)에 초기화됩니다.`);
+                return;
+            }
+
+            const analyzeIcon = document.getElementById('analyzeIcon');
+            const analyzeText = document.getElementById('analyzeText');
+            const spinner = document.getElementById('spinner');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+
+            analyzeBtn.disabled = true;
+            analyzeIcon.style.display = 'none';
+            analyzeText.textContent = 'AI가 문제를 분석 중입니다...';
+            spinner.style.display = 'block';
+
+            try {
+                const base64Data = selectedImage.split(',')[1];
+                const subject = document.getElementById('subjectSelect').value;
+
+                const response = await fetch('https://gogwan-backend-818506848351.asia-northeast3.run.app/api/solve-problem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        image: base64Data,
+                        subject: subject || undefined
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // 사용 횟수 증가
+                    incrementUsageCount();
+
+                    // 원본 이미지 표시
+                    document.getElementById('originalProblemImage').src = selectedImage;
+
+                    // Markdown 형식 변환 함수 (** -> <strong>)
+                    function formatMarkdown(text) {
+                        if (!text) return '';
+                        // **텍스트** -> <strong>텍스트</strong>
+                        return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    }
+
+                    // 결과 표시
+                    document.getElementById('problemText').textContent = result.problem || '문제 내용을 인식했습니다.';
+                    document.getElementById('answerText').innerHTML = formatMarkdown(result.answer || '');
+                    document.getElementById('explanationText').innerHTML = formatMarkdown(result.explanation || '');
+                    document.getElementById('conceptText').innerHTML = formatMarkdown(result.concept || '');
+
+                    document.getElementById('resultCard').style.display = 'block';
+                    document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('문제 분석에 실패했습니다: ' + (result.error || result.detail || '알 수 없는 오류'));
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeIcon.style.display = 'block';
+                analyzeText.textContent = '문제 분석하기';
+                spinner.style.display = 'none';
+            }
+        });
+
+        // 다운로드 버튼 - iOS와 데스크탑 모두 지원
+        document.getElementById('downloadBtn').addEventListener('click', async () => {
+            const downloadContainer = document.getElementById('downloadContainer');
+
+            // 버튼 숨기기
+            const buttons = document.querySelector('.result-card > div:last-child');
+            const originalDisplay = buttons.style.display;
+            buttons.style.display = 'none';
+
+            // 맨 위로 스크롤
+            window.scrollTo(0, 0);
+            downloadContainer.scrollIntoView({ behavior: 'smooth' });
+
+            // 잠시 대기
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            try {
+                // html2canvas로 캡처
+                const canvas = await html2canvas(downloadContainer, {
+                    scale: 2,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                const imageDataUrl = canvas.toDataURL('image/png', 1.0);
+
+                // iOS Web Share API 지원 여부 확인
+                if (navigator.share && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    try {
+                        const response = await fetch(imageDataUrl);
+                        const blob = await response.blob();
+                        const file = new File([blob], `AI문제해설_${Date.now()}.png`, { type: 'image/png' });
+
+                        await navigator.share({
+                            files: [file],
+                            title: 'AI 문제 해설',
+                            text: '잼쌤 AI 문제풀이 해설입니다.'
+                        });
+                    } catch (error) {
+                        console.log('공유 실패:', error);
+                        window.open(imageDataUrl, '_blank');
+                        alert('이미지를 길게 눌러서 "이미지 저장"을 선택하세요.');
+                    }
+                } else {
+                    // 데스크탑: 다운로드
+                    const link = document.createElement('a');
+                    link.download = `AI문제해설_${Date.now()}.png`;
+                    link.href = imageDataUrl;
+                    link.click();
+                }
+            } catch (error) {
+                alert('다운로드에 실패했습니다: ' + error.message);
+            } finally {
+                // 버튼 다시 표시
+                buttons.style.display = originalDisplay;
+            }
+        });
+
+        // 다시 풀기 버튼
+        document.getElementById('retryBtn').addEventListener('click', () => {
+            // 초기화
+            selectedImage = null;
+            previewImage.style.display = 'none';
+            placeholder.style.display = 'block';
+            uploadBox.classList.remove('uploaded');
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('resultCard').style.display = 'none';
+            fileInput.value = '';
+            document.getElementById('subjectSelect').value = '';
+
+            // 맨 위로 스크롤
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+</html>

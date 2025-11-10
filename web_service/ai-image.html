@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 이미지 만들기 - GOGWAN</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="history.back()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+                </svg>
+            </button>
+            <h1 class="page-title">AI 이미지 만들기</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 소개 카드 -->
+        <div class="intro-card purple-gradient">
+            <div class="intro-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                    <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                </svg>
+            </div>
+            <div class="intro-content">
+                <h2>AI로 이미지 만들기</h2>
+                <p>증명사진부터 재미있는 변환까지</p>
+            </div>
+        </div>
+
+        <!-- 섹션 제목 -->
+        <div class="section-title">이미지 도구</div>
+
+        <!-- 이미지 도구 카드들 -->
+        <div class="tool-cards">
+            <!-- 배경화면 제거 -->
+            <div class="tool-card" onclick="location.href='background-remover.html'">
+                <div class="card-icon green-gradient">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                        <path d="M19 7v2.99s-1.99.01-2 0V7h-3s.01-1.99 0-2h3V2h2v3h3v2h-3zm-3 4V8h-3V5H5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8h-3zM5 19l3-4 2 3 3-4 4 5H5z"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>배경화면 제거</h2>
+                    <p>AI가 자동으로 배경을 제거합니다</p>
+                    <div class="badge green-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                        </svg>
+                        NEW
+                    </div>
+                </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#9CA3AF">
+                    <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z"/>
+                </svg>
+            </div>
+
+            <!-- 증명사진 생성 -->
+            <div class="tool-card" onclick="location.href='id-photo.html'">
+                <div class="card-icon blue-gradient">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                        <path d="M4 4H20V20H4V4M6 6V18H18V6H6M12 9C13.1 9 14 9.9 14 11C14 12.1 13.1 13 12 13C10.9 13 10 12.1 10 11C10 9.9 10.9 9 12 9M16 17H8V16C8 14.67 10.67 14 12 14C13.33 14 16 14.67 16 16V17Z"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>증명사진 생성</h2>
+                    <p>즉석에서 만드는 증명사진</p>
+                    <div class="badge blue-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                        </svg>
+                        AI 배경 제거
+                    </div>
+                </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#9CA3AF">
+                    <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z"/>
+                </svg>
+            </div>
+
+            <!-- AI사진 만들기 -->
+            <div class="tool-card" onclick="location.href='style-select.html'">
+                <div class="card-icon purple-gradient">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 22C11.45 22 11 21.55 11 21V16.5C11 15.67 11.67 15 12.5 15H13.5C14.33 15 15 15.67 15 16.5V21C15 21.55 14.55 22 14 22H12M19 16L7 14L3 8C3 8 3 5 10 5C17 5 17 8 17 8L13 14L19 16Z"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <h2>AI사진 만들기</h2>
+                    <p>다양한 스타일로 사진 변환</p>
+                    <div class="badge purple-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                        </svg>
+                        AI 스타일 변환
+                    </div>
+                </div>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="#9CA3AF">
+                    <path d="M8.59 16.59L13.17 12L8.59 7.41L10 6L16 12L10 18L8.59 16.59Z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .intro-card {
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .intro-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .intro-content h2 {
+            font-size: 1.25em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .intro-content p {
+            font-size: 0.875em;
+            color: white;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 1.125em;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+
+        .tool-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tool-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .tool-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</body>
+</html>

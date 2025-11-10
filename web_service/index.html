@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cactus Labs Korea - AI-Powered App Development</title>
+    <meta name="description" content="iOS, Android, Web 전문 개발 기업. AI 기술로 혁신적인 앱을 만듭니다.">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A0E27;
+            --secondary: #6366F1;
+            --accent: #8B5CF6;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --bg: #FFFFFF;
+            --bg-alt: #F9FAFB;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: var(--bg);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        .nav-cta {
+            background: var(--secondary);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .nav-cta:hover {
+            background: var(--accent);
+            color: white !important;
+        }
+
+        /* Hero */
+        .hero {
+            margin-top: 60px;
+            padding: 120px 32px 80px;
+            background: linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 800;
+            letter-spacing: -3px;
+            line-height: 1.1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 64px;
+            margin-top: 60px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Section */
+        section {
+            padding: 80px 32px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            margin-bottom: 48px;
+        }
+
+        .section-label {
+            font-size: 0.875rem;
+            color: var(--secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -2px;
+            line-height: 1.2;
+        }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #E5E7EB;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.1);
+            transform: translateY(-4px);
+        }
+
+        .product-header {
+            padding: 32px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+        }
+
+        .product-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 16px;
+        }
+
+        .product-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .product-platforms {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .platform-badge {
+            padding: 4px 10px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--secondary);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .product-category {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .product-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #F3F4F6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .product-link {
+            color: var(--secondary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-link:hover {
+            gap: 10px;
+        }
+
+        /* Featured Service */
+        .featured {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            border-radius: 24px;
+            padding: 64px;
+            color: white;
+            margin: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect fill="rgba(255,255,255,0.05)" width="100" height="100"/></svg>');
+            opacity: 0.3;
+        }
+
+        .featured-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+        }
+
+        .featured h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .featured p {
+            font-size: 1.15rem;
+            opacity: 0.95;
+            margin-bottom: 32px;
+        }
+
+        .featured-button {
+            display: inline-block;
+            background: white;
+            color: var(--secondary);
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .featured-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 64px 32px 32px;
+        }
+
+        .footer-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .footer-brand p {
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .footer-section a {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            margin-bottom: 12px;
+            transition: color 0.2s;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero-stats {
+                gap: 40px;
+            }
+
+            .featured {
+                padding: 48px 32px;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .hero {
+                padding: 80px 24px 60px;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: 32px;
+            }
+
+            section {
+                padding: 60px 24px;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .featured {
+                padding: 40px 24px;
+            }
+
+            .footer-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">Cactus Labs</a>
+            <div class="nav-links">
+                <a href="#products">Products</a>
+                <a href="#about">About</a>
+                <a href="mailto:cactuslabskorea2@gmail.com" class="nav-cta">Contact</a>
+                <button id="adminBtn" class="admin-btn" style="background: transparent; border: 2px solid var(--secondary); color: var(--secondary); padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.95rem;">🔐 Admin</button>
+                <button id="adminDashboardBtn" class="admin-btn" style="display: none; background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%); border: none; color: white; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.95rem;">🎛️ 관리자 대시보드</button>
+                <button id="logoutBtn" class="admin-btn" style="display: none; background: #ef4444; border: none; color: white; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.95rem;">🚪 Logout</button>
+            </div>
+            <button class="mobile-menu-btn">☰</button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>Building the Future<br>with AI</h1>
+        <p>혁신적인 AI 기술로 iOS, Android, Web 앱을 개발하는 전문 기업</p>
+
+        <div class="hero-stats">
+            <div class="stat">
+                <div class="stat-number">12+</div>
+                <div class="stat-label">Products</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">3</div>
+                <div class="stat-label">Platforms</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">2025</div>
+                <div class="stat-label">Founded</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Service -->
+    <section>
+        <div class="featured">
+            <div class="featured-content">
+                <h2>공무중 이상무</h2>
+                <p>공무원 업무를 AI로 스마트하게. 보도자료 작성, PDF→PPT 변환, 현수막 생성, 이미지 편집 등 다양한 AI 도구를 제공합니다.</p>
+                <a href="gogwan.html" class="featured-button">서비스 시작하기 →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products -->
+    <section id="products">
+        <div class="section-header">
+            <div class="section-label">Our Products</div>
+            <h2 class="section-title">다양한 분야의<br>앱 개발 경험</h2>
+        </div>
+
+        <div class="products-grid">
+            <div class="product-card" onclick="location.href='gogwan.html'">
+                <div class="product-header">
+                    <div class="product-icon">🏢</div>
+                    <h3 class="product-title">공무중이상무</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">Web</span>
+                    </div>
+                    <p class="product-category">AI 업무 도구 · 공공기관</p>
+                </div>
+                <div class="product-footer">
+                    <span class="product-link">서비스 시작 →</span>
+                </div>
+            </div>
+
+            <div class="product-card" onclick="location.href='fast-rabbit.html'">
+                <div class="product-header">
+                    <div class="product-icon">🐰</div>
+                    <h3 class="product-title">손이빠른토끼씨</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">Web</span>
+                    </div>
+                    <p class="product-category">AI 속기 서비스 · 실시간 변환</p>
+                </div>
+                <div class="product-footer">
+                    <span class="product-link">서비스 시작 →</span>
+                </div>
+            </div>
+
+            <div class="product-card" onclick="location.href='jamssam.html'">
+                <div class="product-header">
+                    <div class="product-icon">🎓</div>
+                    <h3 class="product-title">잼쌤</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">Web</span>
+                    </div>
+                    <p class="product-category">AI 학습 도구 · 교육</p>
+                </div>
+                <div class="product-footer">
+                    <span class="product-link">서비스 시작 →</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">📚</div>
+                    <h3 class="product-title">애니보카</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                        <span class="platform-badge">Android</span>
+                    </div>
+                    <p class="product-category">교육 · 어학 학습</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store · Google Play</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">💰</div>
+                    <h3 class="product-title">나야.가계부</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                        <span class="platform-badge">Android</span>
+                    </div>
+                    <p class="product-category">금융 · 가계부 관리</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store · Google Play</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🏃</div>
+                    <h3 class="product-title">Sprintoday</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                    </div>
+                    <p class="product-category">헬스 · 피트니스</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🚗</div>
+                    <h3 class="product-title">CarMoney</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                    </div>
+                    <p class="product-category">금융 · 자동차</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">💊</div>
+                    <h3 class="product-title">DailyBP</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                    </div>
+                    <p class="product-category">건강 · 의료</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">✏️</div>
+                    <h3 class="product-title">Dazim</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                    </div>
+                    <p class="product-category">라이프스타일</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🎨</div>
+                    <h3 class="product-title">Zoepick</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">iOS</span>
+                    </div>
+                    <p class="product-category">라이프스타일</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">App Store</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🎵</div>
+                    <h3 class="product-title">KpopVoca</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">Android</span>
+                    </div>
+                    <p class="product-category">교육 · K-POP</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">Google Play</span>
+                </div>
+            </div>
+
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-icon">🐰</div>
+                    <h3 class="product-title">손이빠른토끼씨</h3>
+                    <div class="product-platforms">
+                        <span class="platform-badge">Web</span>
+                    </div>
+                    <p class="product-category">유틸리티</p>
+                </div>
+                <div class="product-footer">
+                    <span style="color: #9CA3AF; font-size: 0.85rem;">Web Service</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Login Modal -->
+    <div id="adminModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 10000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 40px; border-radius: 20px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <h2 style="margin-bottom: 20px; color: var(--primary);">🔐 관리자 로그인</h2>
+            <input type="email" id="adminEmail" placeholder="이메일" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+            <input type="password" id="adminPassword" placeholder="비밀번호" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+            <button id="loginSubmit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%); color: white; border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer; margin-bottom: 10px;">로그인</button>
+            <button id="modalClose" style="width: 100%; padding: 12px; background: #e0e0e0; color: var(--text); border: none; border-radius: 8px; font-size: 1em; font-weight: 600; cursor: pointer;">취소</button>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <section id="adminDashboard" style="display: none; padding: 80px 32px; background: #f9fafb;">
+        <div style="max-width: 1400px; margin: 0 auto;">
+            <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">📊 Analytics Dashboard</h2>
+                        <p style="color: var(--text-light);">서비스 사용 현황 및 통계</p>
+                    </div>
+                    <select id="periodFilter" style="padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em;">
+                        <option value="today">오늘</option>
+                        <option value="week">최근 7일</option>
+                        <option value="month" selected>최근 30일</option>
+                        <option value="all">전체</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">👥</div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">총 방문자</div>
+                    <div id="totalVisitors" style="color: #333; font-size: 2.5em; font-weight: 700;">-</div>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">⚡</div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">기능 실행</div>
+                    <div id="totalFeatures" style="color: #333; font-size: 2.5em; font-weight: 700;">-</div>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">📥</div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">다운로드</div>
+                    <div id="totalDownloads" style="color: #333; font-size: 2.5em; font-weight: 700;">-</div>
+                </div>
+                <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">⭐</div>
+                    <div style="color: #666; font-size: 0.9em; margin-bottom: 5px;">인기 서비스</div>
+                    <div id="topService" style="color: #333; font-size: 1.5em; font-weight: 700;">-</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; margin-bottom: 30px;">
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid var(--secondary);">📈 일자별 방문자 추세</h3>
+                    <div style="height: 300px;">
+                        <canvas id="dailyChart"></canvas>
+                    </div>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid var(--secondary);">🏆 인기 페이지</h3>
+                    <div id="topPagesList" style="max-height: 300px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid var(--secondary);">📊 시간대별 사용</h3>
+                    <div style="height: 250px;">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+                <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3 style="color: #333; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 3px solid var(--secondary);">📅 요일별 사용</h3>
+                    <div style="height: 250px;">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="about">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <h3>Cactus Labs Korea</h3>
+                <p>AI 기반 솔루션으로 더 나은 미래를 만들어갑니다. iOS, Android, Web 플랫폼에서 혁신적인 앱을 개발합니다.</p>
+                <p style="margin-top: 16px;">Est. 2025</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>Products</h4>
+                <a href="gogwan.html">공무중이상무</a>
+                <a href="fast-rabbit.html">손이빠른토끼씨</a>
+                <a href="#">애니보카</a>
+                <a href="#">나야.가계부</a>
+            </div>
+
+            <div class="footer-section">
+                <h4>Company</h4>
+                <a href="#about">About</a>
+                <a href="#products">Portfolio</a>
+            </div>
+
+            <div class="footer-section">
+                <h4>Contact</h4>
+                <a href="mailto:cactuslabskorea2@gmail.com">cactuslabskorea2@gmail.com</a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2025 Cactus Labs Korea. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, query, where, getDocs, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const adminBtn = document.getElementById('adminBtn');
+        const adminDashboardBtn = document.getElementById('adminDashboardBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const adminModal = document.getElementById('adminModal');
+        const adminDashboard = document.getElementById('adminDashboard');
+        const loginSubmit = document.getElementById('loginSubmit');
+        const modalClose = document.getElementById('modalClose');
+
+        let dailyChart, hourlyChart, weeklyChart;
+
+        // 페이지 이름 매핑
+        const pageNameMap = {
+            'index': '메인 홈',
+            'gogwan': '고관 소개',
+            'jamssam': '잠쌤 소개',
+            'fast-rabbit': '패스트 래빗',
+            'create': 'AI 보도자료 작성',
+            'press-release': '보도자료 목록',
+            'background-remover': '배경 제거',
+            'id-photo': '증명사진 생성',
+            'style-transfer': '스타일 전환',
+            'mbti-test': 'MBTI 테스트',
+            'saju-lifetime': '평생운',
+            'saju-yearly': '신년운세',
+            'ai-problem-solver': 'AI 문제풀이',
+            'banner-maker': '배너 메이커',
+            'pdf-to-ppt': 'PDF→PPT'
+        };
+
+        // 관리자 버튼 클릭 - 로그인 페이지로 이동 (메인 페이지로 돌아올 수 있도록 returnUrl 전달)
+        adminBtn.addEventListener('click', () => {
+            const returnUrl = encodeURIComponent(window.location.pathname);
+            window.location.href = `admin/login.html?returnUrl=${returnUrl}`;
+        });
+
+        // 관리자 대시보드 버튼 클릭 - admin/index.html로 이동
+        adminDashboardBtn.addEventListener('click', () => {
+            window.location.href = 'admin/index.html';
+        });
+
+        // 모달 닫기
+        modalClose.addEventListener('click', () => {
+            adminModal.style.display = 'none';
+        });
+
+        // 로그인
+        loginSubmit.addEventListener('click', async () => {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 입력하세요');
+                return;
+            }
+
+            try {
+                loginSubmit.disabled = true;
+                loginSubmit.textContent = '로그인 중...';
+
+                await signInWithEmailAndPassword(auth, email, password);
+
+                adminModal.style.display = 'none';
+                alert('✅ 관리자 로그인 성공!');
+
+                // 입력 필드 초기화
+                document.getElementById('adminEmail').value = '';
+                document.getElementById('adminPassword').value = '';
+            } catch (error) {
+                alert('❌ 로그인 실패: ' + error.message);
+                console.error(error);
+            } finally {
+                loginSubmit.disabled = false;
+                loginSubmit.textContent = '로그인';
+            }
+        });
+
+        // 로그아웃
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                alert('로그아웃 되었습니다');
+            } catch (error) {
+                alert('로그아웃 실패: ' + error.message);
+            }
+        });
+
+        // 인증 상태 변경 감지
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // 로그인됨 - UI만 업데이트 (자동 리다이렉트 제거)
+                adminBtn.style.display = 'none';
+                adminDashboardBtn.style.display = 'block';
+                logoutBtn.style.display = 'block';
+                console.log('로그인된 사용자:', user.email);
+            } else {
+                // 로그아웃됨
+                adminBtn.style.display = 'block';
+                adminDashboardBtn.style.display = 'none';
+                logoutBtn.style.display = 'none';
+                if (adminDashboard) adminDashboard.style.display = 'none';
+            }
+        });
+
+        // 기간 필터
+        function getDateFilter() {
+            const period = document.getElementById('periodFilter').value;
+            const now = new Date();
+            let startDate = new Date(0);
+
+            if (period === 'today') {
+                startDate = new Date(now.setHours(0, 0, 0, 0));
+            } else if (period === 'week') {
+                startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            } else if (period === 'month') {
+                startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            }
+
+            return startDate;
+        }
+
+        // 분석 데이터 로드
+        async function loadAnalytics() {
+            try {
+                const startDate = getDateFilter();
+
+                // 페이지 뷰
+                const pageViewsQuery = query(
+                    collection(db, 'analytics_page_views'),
+                    where('timestamp', '>=', startDate),
+                    orderBy('timestamp', 'desc')
+                );
+                const pageViewsSnapshot = await getDocs(pageViewsQuery);
+                const pageViews = pageViewsSnapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    timestamp: doc.data().timestamp?.toDate()
+                }));
+
+                // 기능 사용
+                const featureUsageQuery = query(
+                    collection(db, 'analytics_feature_usage'),
+                    where('timestamp', '>=', startDate),
+                    orderBy('timestamp', 'desc')
+                );
+                const featureUsageSnapshot = await getDocs(featureUsageQuery);
+                const featureUsage = featureUsageSnapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    timestamp: doc.data().timestamp?.toDate()
+                }));
+
+                // 다운로드
+                const downloadsQuery = query(
+                    collection(db, 'analytics_downloads'),
+                    where('timestamp', '>=', startDate),
+                    orderBy('timestamp', 'desc')
+                );
+                const downloadsSnapshot = await getDocs(downloadsQuery);
+                const downloads = downloadsSnapshot.docs.map(doc => ({
+                    ...doc.data(),
+                    timestamp: doc.data().timestamp?.toDate()
+                }));
+
+                updateStats(pageViews, featureUsage, downloads);
+                updateCharts(pageViews);
+            } catch (error) {
+                console.error('Analytics 로드 실패:', error);
+            }
+        }
+
+        // 통계 업데이트
+        function updateStats(pageViews, featureUsage, downloads) {
+            document.getElementById('totalVisitors').textContent = pageViews.length.toLocaleString();
+            document.getElementById('totalFeatures').textContent = featureUsage.length.toLocaleString();
+            document.getElementById('totalDownloads').textContent = downloads.length.toLocaleString();
+
+            // 인기 페이지
+            const pageCounts = {};
+            pageViews.forEach(pv => {
+                pageCounts[pv.pageName] = (pageCounts[pv.pageName] || 0) + 1;
+            });
+            const topPage = Object.entries(pageCounts).sort((a, b) => b[1] - a[1])[0];
+            if (topPage) {
+                document.getElementById('topService').textContent = pageNameMap[topPage[0]] || topPage[0];
+            }
+
+            // 인기 페이지 목록
+            const sorted = Object.entries(pageCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+            const topPagesList = document.getElementById('topPagesList');
+            topPagesList.innerHTML = sorted.map(([page, count], index) => `
+                <div style="padding: 12px; background: ${index % 2 === 0 ? '#f9fafb' : 'white'}; border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between;">
+                    <span><strong>${index + 1}.</strong> ${pageNameMap[page] || page}</span>
+                    <span style="font-weight: 700; color: var(--secondary);">${count}회</span>
+                </div>
+            `).join('');
+        }
+
+        // 차트 업데이트
+        function updateCharts(pageViews) {
+            // 일자별 추세
+            const dailyCounts = {};
+            pageViews.forEach(pv => {
+                if (!pv.timestamp) return;
+                const date = pv.timestamp.toISOString().split('T')[0];
+                dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+            });
+
+            const sorted = Object.entries(dailyCounts).sort((a, b) => a[0].localeCompare(b[0]));
+            const labels = sorted.map(([date]) => date);
+            const data = sorted.map(([, count]) => count);
+
+            const dailyCtx = document.getElementById('dailyChart');
+            if (dailyChart) dailyChart.destroy();
+            dailyChart = new Chart(dailyCtx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: '일일 방문자',
+                        data,
+                        borderColor: '#6366F1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // 시간대별
+            const hourCounts = Array(24).fill(0);
+            pageViews.forEach(pv => {
+                if (pv.timestamp) {
+                    hourCounts[pv.timestamp.getHours()]++;
+                }
+            });
+
+            const hourlyCtx = document.getElementById('hourlyChart');
+            if (hourlyChart) hourlyChart.destroy();
+            hourlyChart = new Chart(hourlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}시`),
+                    datasets: [{
+                        label: '시간대별',
+                        data: hourCounts,
+                        backgroundColor: '#6366F1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // 요일별
+            const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+            const dayCounts = Array(7).fill(0);
+            pageViews.forEach(pv => {
+                if (pv.timestamp) {
+                    dayCounts[pv.timestamp.getDay()]++;
+                }
+            });
+
+            const weeklyCtx = document.getElementById('weeklyChart');
+            if (weeklyChart) weeklyChart.destroy();
+            weeklyChart = new Chart(weeklyCtx, {
+                type: 'bar',
+                data: {
+                    labels: dayNames,
+                    datasets: [{
+                        label: '요일별',
+                        data: dayCounts,
+                        backgroundColor: '#8B5CF6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // 기간 필터 변경
+        document.getElementById('periodFilter').addEventListener('change', loadAnalytics);
+    </script>
+</body>
+</html>

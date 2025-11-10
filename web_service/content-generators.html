@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <script type="module" src="admin/auth-check.js"></script>
+  <script src="analytics.js" type="module"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>교육 컨텐츠 생성기 - Cactus Labs</title>
+  <meta name="description" content="AI를 활용한 다양한 교육 컨텐츠 자동 생성 플랫폼">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #0A0E27;
+      --secondary: #6366F1;
+      --accent: #8B5CF6;
+      --text: #1F2937;
+      --text-light: #6B7280;
+      --bg: #FFFFFF;
+      --bg-alt: #F9FAFB;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background: var(--bg-alt);
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--secondary);
+    }
+
+    .btn-logout {
+      background: #ef4444;
+      border: none;
+      color: white;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.95rem;
+    }
+
+    /* Main Container */
+    .main-container {
+      margin-top: 80px;
+      padding: 40px 20px;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+
+    /* Generator Grid */
+    .generators-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .generator-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s;
+      cursor: pointer;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .generator-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .generator-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      border-color: var(--secondary);
+    }
+
+    .generator-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .generator-card.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .generator-card.disabled:hover {
+      transform: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border-color: transparent;
+    }
+
+    .card-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 8px;
+    }
+
+    .card-description {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .card-features {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .card-features li {
+      padding: 6px 0;
+      color: var(--text);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-features li:before {
+      content: "✓";
+      color: var(--success);
+      font-weight: bold;
+    }
+
+    .card-status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-active {
+      background: #ECFDF5;
+      color: var(--success);
+    }
+
+    .status-coming-soon {
+      background: #FEF3C7;
+      color: var(--warning);
+    }
+
+    /* Info Box */
+    .info-box {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      border-left: 4px solid var(--secondary);
+    }
+
+    .info-box h3 {
+      color: var(--primary);
+      margin-bottom: 16px;
+      font-size: 1.3rem;
+    }
+
+    .info-box p {
+      color: var(--text-light);
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .info-box ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .info-box li {
+      padding: 8px 0;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-box li:before {
+      content: "→";
+      color: var(--secondary);
+      font-weight: bold;
+    }
+
+    /* Stats Section */
+    .stats-section {
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      border-radius: 16px;
+      padding: 40px;
+      color: white;
+      margin-bottom: 32px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .generators-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="index.html" class="logo">Cactus Labs</a>
+      <div class="nav-links">
+        <a href="index.html">홈</a>
+        <a href="admin/index.html">관리자</a>
+        <a href="content-generators.html">컨텐츠 생성기</a>
+        <button onclick="adminLogout()" class="btn-logout">🚪 로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎓 교육 컨텐츠 생성기</h1>
+      <p>AI를 활용한 다양한 교육 컨텐츠 자동 생성 플랫폼</p>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+      <h2 style="margin-bottom: 8px; font-size: 1.8rem;">📊 플랫폼 현황</h2>
+      <p style="opacity: 0.9; margin-bottom: 0;">AI 기반 교육 컨텐츠 생성 도구 모음</p>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <div class="stat-value" id="totalGenerators">1</div>
+          <div class="stat-label">총 생성기</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value" id="activeGenerators">1</div>
+          <div class="stat-label">활성 생성기</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">AI</div>
+          <div class="stat-label">Gemini 통합</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">∞</div>
+          <div class="stat-label">무제한 사용</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <h3>💡 사용 방법</h3>
+      <p>아래에서 원하는 컨텐츠 생성기를 선택하세요. 각 생성기는 특화된 기능을 제공합니다.</p>
+      <ul>
+        <li>CSV 파일 또는 수동 입력으로 대량 생성 가능</li>
+        <li>Gemini AI를 활용한 고품질 컨텐츠 생성</li>
+        <li>JSON, WAV, ZIP 등 다양한 형식으로 다운로드</li>
+        <li>실시간 진행 상황 추적 및 오류 관리</li>
+      </ul>
+    </div>
+
+    <!-- Generators Grid -->
+    <div class="generators-grid" id="generatorsGrid">
+      <!-- AIVOCA 강의 생성기 -->
+      <div class="generator-card" onclick="location.href='lecture-generator.html'">
+        <div class="card-icon">🎓</div>
+        <div class="card-title">AIVOCA 강의 생성기</div>
+        <div class="card-description">영어 단어 강의 및 음성 파일 자동 생성</div>
+        <ul class="card-features">
+          <li>CSV 파일 배치 처리</li>
+          <li>AI 강의 자동 생성 (600자)</li>
+          <li>한국어 TTS 음성 생성</li>
+          <li>ZIP 파일 다운로드</li>
+        </ul>
+        <span class="card-status status-active">운영 중</span>
+      </div>
+
+      <!-- 샘플 Coming Soon 카드들 -->
+      <div class="generator-card disabled">
+        <div class="card-icon">📝</div>
+        <div class="card-title">생성기 #2</div>
+        <div class="card-description">추가 예정인 교육 컨텐츠 생성기</div>
+        <ul class="card-features">
+          <li>기능 설명 1</li>
+          <li>기능 설명 2</li>
+          <li>기능 설명 3</li>
+          <li>기능 설명 4</li>
+        </ul>
+        <span class="card-status status-coming-soon">준비 중</span>
+      </div>
+
+      <div class="generator-card disabled">
+        <div class="card-icon">🎯</div>
+        <div class="card-title">생성기 #3</div>
+        <div class="card-description">추가 예정인 교육 컨텐츠 생성기</div>
+        <ul class="card-features">
+          <li>기능 설명 1</li>
+          <li>기능 설명 2</li>
+          <li>기능 설명 3</li>
+          <li>기능 설명 4</li>
+        </ul>
+        <span class="card-status status-coming-soon">준비 중</span>
+      </div>
+
+      <div class="generator-card disabled">
+        <div class="card-icon">📚</div>
+        <div class="card-title">생성기 #4</div>
+        <div class="card-description">추가 예정인 교육 컨텐츠 생성기</div>
+        <ul class="card-features">
+          <li>기능 설명 1</li>
+          <li>기능 설명 2</li>
+          <li>기능 설명 3</li>
+          <li>기능 설명 4</li>
+        </ul>
+        <span class="card-status status-coming-soon">준비 중</span>
+      </div>
+    </div>
+
+    <!-- 추가 정보 -->
+    <div class="info-box" style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); border-color: var(--secondary);">
+      <h3>🚀 새로운 생성기 추가 예정</h3>
+      <p>
+        더 많은 교육 컨텐츠 생성기가 곧 추가됩니다!<br>
+        각 생성기는 특정 교육 목적에 최적화되어 있으며, AI 기술을 활용하여 고품질 컨텐츠를 빠르게 생성할 수 있습니다.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // 활성/비활성 생성기 카운트
+    function updateStats() {
+      const cards = document.querySelectorAll('.generator-card');
+      const activeCards = document.querySelectorAll('.generator-card:not(.disabled)');
+
+      document.getElementById('totalGenerators').textContent = cards.length;
+      document.getElementById('activeGenerators').textContent = activeCards.length;
+    }
+
+    // 페이지 로드 시 통계 업데이트
+    updateStats();
+  </script>
+</body>
+</html>

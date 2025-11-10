@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보도자료 - GOGWAN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .press-release-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 16px;
+        }
+
+        .press-header {
+            border-bottom: 3px solid #3B82F6;
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+        }
+
+        .press-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 0.875em;
+            color: #6B7280;
+        }
+
+        .press-organization {
+            font-weight: 600;
+            color: #3B82F6;
+        }
+
+        .press-category {
+            padding: 4px 12px;
+            background: #EFF6FF;
+            color: #2563EB;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .press-title {
+            font-size: 2em;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.3;
+            margin-bottom: 16px;
+        }
+
+        .press-subtitle {
+            font-size: 1.25em;
+            font-weight: 500;
+            color: #4B5563;
+            line-height: 1.5;
+        }
+
+        .press-body {
+            font-size: 1.0625em;
+            line-height: 1.8;
+            color: #1F2937;
+            white-space: pre-wrap;
+        }
+
+        .press-body p {
+            margin-bottom: 24px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .action-button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9375em;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3B82F6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563EB;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .share-menu {
+            position: relative;
+        }
+
+        .share-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            margin-bottom: 8px;
+            padding: 8px;
+            z-index: 1000;
+        }
+
+        .share-dropdown.show {
+            display: block;
+        }
+
+        .share-option {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.2s;
+        }
+
+        .share-option:hover {
+            background: #F3F4F6;
+        }
+
+        .share-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 768px) {
+            .press-release-container {
+                padding: 24px;
+            }
+
+            .press-title {
+                font-size: 1.5em;
+            }
+
+            .press-subtitle {
+                font-size: 1.0625em;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="history.back()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+                </svg>
+            </button>
+            <h1 class="page-title">보도자료</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 보도자료 내용 -->
+        <div class="press-release-container">
+            <div class="press-header">
+                <div class="press-meta">
+                    <span class="press-organization" id="organization"></span>
+                    <span class="press-category" id="category"></span>
+                </div>
+                <h1 class="press-title" id="title"></h1>
+                <p class="press-subtitle" id="subtitle"></p>
+            </div>
+            <div class="press-body" id="body"></div>
+
+            <div class="action-buttons">
+                <button class="action-button btn-primary" onclick="copyToClipboard()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M16 1H4C2.9 1 2 1.9 2 3V17H4V3H16V1M19 5H8C6.9 5 6 5.9 6 7V21C6 22.1 6.9 23 8 23H19C20.1 23 21 22.1 21 21V7C21 5.9 20.1 5 19 5M19 21H8V7H19V21Z"/>
+                    </svg>
+                    복사하기
+                </button>
+                <div class="share-menu" style="flex: 1;">
+                    <button class="action-button btn-secondary" onclick="toggleShareMenu()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18 16.08C17.24 16.08 16.56 16.38 16.04 16.85L8.91 12.7C8.96 12.47 9 12.24 9 12S8.96 11.53 8.91 11.3L15.96 7.19C16.5 7.69 17.21 8 18 8C19.66 8 21 6.66 21 5S19.66 2 18 2 15 3.34 15 5C15 5.24 15.04 5.47 15.09 5.7L8.04 9.81C7.5 9.31 6.79 9 6 9C4.34 9 3 10.34 3 12S4.34 15 6 15C6.79 15 7.5 14.69 8.04 14.19L15.16 18.34C15.11 18.55 15.08 18.77 15.08 19C15.08 20.61 16.39 21.91 18 21.91S20.92 20.61 20.92 19C20.92 17.39 19.61 16.08 18 16.08Z"/>
+                        </svg>
+                        공유하기
+                    </button>
+                    <div class="share-dropdown" id="shareDropdown">
+                        <div class="share-option" onclick="shareKakao()">
+                            <div class="share-icon">💬</div>
+                            <span>카카오톡</span>
+                        </div>
+                        <div class="share-option" onclick="shareSMS()">
+                            <div class="share-icon">✉️</div>
+                            <span>문자 메시지</span>
+                        </div>
+                        <div class="share-option" onclick="shareLink()">
+                            <div class="share-icon">🔗</div>
+                            <span>링크 복사</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 데이터 로드
+        const data = JSON.parse(localStorage.getItem('pressReleaseData'));
+
+        if (!data) {
+            alert('보도자료 데이터를 찾을 수 없습니다.');
+            location.href = 'create.html';
+        }
+
+        // 내용 파싱
+        const lines = data.content.split('\n').filter(line => line.trim());
+        let title = '';
+        let subtitle = '';
+        let body = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            // 제목 찾기
+            if (line.startsWith('제목:')) {
+                title = line.replace('제목:', '').trim();
+            } else if (line.startsWith('##') || (i === 0 && !title)) {
+                title = line.replace(/^#+\s*/, '').trim();
+            }
+            // 부제 찾기
+            else if (line.startsWith('부제:')) {
+                subtitle = line.replace('부제:', '').trim();
+            } else if (line.startsWith('###')) {
+                subtitle = line.replace(/^#+\s*/, '').trim();
+            }
+            // 본문
+            else if (line && !line.startsWith('본문:')) {
+                body.push(line);
+            }
+        }
+
+        // 제목이 없으면 첫 줄을 제목으로
+        if (!title && body.length > 0) {
+            title = body.shift();
+        }
+
+        // 부제가 없으면 두 번째 줄을 부제로
+        if (!subtitle && body.length > 0 && body[0].length < 100) {
+            subtitle = body.shift();
+        }
+
+        // DOM에 표시
+        document.getElementById('organization').textContent = data.organization;
+        document.getElementById('category').textContent = data.category;
+        document.getElementById('title').textContent = title || '제목 없음';
+        document.getElementById('subtitle').textContent = subtitle;
+        document.getElementById('body').textContent = body.join('\n\n');
+
+        // 복사하기
+        function copyToClipboard() {
+            const fullText = `${data.organization}\n\n${title}\n${subtitle ? subtitle + '\n' : ''}\n${body.join('\n\n')}`;
+
+            navigator.clipboard.writeText(fullText).then(() => {
+                alert('보도자료가 클립보드에 복사되었습니다.');
+            }).catch(err => {
+                console.error('복사 실패:', err);
+                alert('복사에 실패했습니다.');
+            });
+        }
+
+        // 공유 메뉴 토글
+        function toggleShareMenu() {
+            const dropdown = document.getElementById('shareDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // 외부 클릭시 공유 메뉴 닫기
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.share-menu')) {
+                document.getElementById('shareDropdown').classList.remove('show');
+            }
+        });
+
+        // 카카오톡 공유
+        function shareKakao() {
+            const shareText = `${title}\n\n${subtitle}\n\n${data.organization}`;
+            const url = window.location.href;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: shareText,
+                    url: url
+                }).catch(err => console.log('공유 취소'));
+            } else {
+                // 카카오톡 웹 공유 (카카오 SDK 필요)
+                alert('카카오톡 공유 기능은 모바일에서 사용 가능합니다.');
+            }
+        }
+
+        // SMS 공유
+        function shareSMS() {
+            const shareText = `${title}\n\n${subtitle}\n\n${data.organization}`;
+            const url = `sms:?body=${encodeURIComponent(shareText)}`;
+            window.location.href = url;
+        }
+
+        // 링크 복사
+        function shareLink() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('링크가 복사되었습니다.');
+            });
+        }
+    </script>
+</body>
+</html>

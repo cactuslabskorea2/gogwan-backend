@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공무중 이상무 - AI 기반 업무 자동화 플랫폼</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A0E27;
+            --secondary: #6366F1;
+            --accent: #8B5CF6;
+            --text: #1F2937;
+            --text-light: #6B7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            background: #F9FAFB;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 16px 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            padding: 80px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: inline-block;
+            background: white;
+            color: var(--secondary);
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Services Section */
+        .services {
+            max-width: 1200px;
+            margin: 60px auto 80px;
+            padding: 0 24px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-label {
+            font-size: 0.875rem;
+            color: var(--secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -1px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .service-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .service-header {
+            padding: 32px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+        }
+
+        .service-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .service-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .service-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--secondary);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .service-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .service-link {
+            color: var(--secondary);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+        }
+
+        .service-link:hover {
+            gap: 10px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--primary);
+            padding: 80px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-section p {
+            font-size: 1.15rem;
+            opacity: 0.85;
+            margin-bottom: 32px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--secondary);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 24px;
+            }
+
+            .services {
+                margin-top: 40px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">Cactus Labs</a>
+            <a href="/" class="back-link">← 홈으로</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>공무중 이상무</h1>
+        <p>AI 기술로 공무원 업무를 스마트하게 자동화하는 올인원 플랫폼</p>
+        <a href="smart-work.html" class="hero-cta">서비스 시작하기 →</a>
+    </section>
+
+    <!-- Services -->
+    <section class="services">
+        <div class="section-header">
+            <div class="section-label">Our Services</div>
+            <h2 class="section-title">AI 업무 자동화 도구</h2>
+        </div>
+
+        <div class="services-grid">
+            <!-- AI 업무도구 -->
+            <div class="service-card" onclick="location.href='smart-work.html'">
+                <div class="service-header">
+                    <div class="service-icon">💼</div>
+                    <h3>AI 업무도구</h3>
+                    <p>보도자료 작성, PDF→PPT 변환, 현수막 디자인 등 업무에 필요한 AI 도구</p>
+                    <span class="service-badge">인기</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- AI 이미지 만들기 -->
+            <div class="service-card" onclick="location.href='ai-image.html'">
+                <div class="service-header">
+                    <div class="service-icon">🖼️</div>
+                    <h3>AI 이미지 만들기</h3>
+                    <p>증명사진 생성, 스타일 변환 등 다양한 이미지 편집 기능</p>
+                    <span class="service-badge">NEW</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- 공감터 -->
+            <div class="service-card" onclick="location.href='lounge.html'">
+                <div class="service-header">
+                    <div class="service-icon">💝</div>
+                    <h3>공감터</h3>
+                    <p>MBTI 테스트, 사주팔자 등 재미있는 콘텐츠로 힐링 타임</p>
+                    <span class="service-badge">힐링</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>지금 바로 시작하세요</h2>
+        <p>무료로 모든 기능을 사용해보실 수 있습니다</p>
+        <a href="smart-work.html" class="cta-button">서비스 이용하기 →</a>
+    </section>
+</body>
+</html>

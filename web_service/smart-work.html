@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 업무도구 - 공무중 이상무</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A0E27;
+            --secondary: #6366F1;
+            --accent: #8B5CF6;
+            --text: #1F2937;
+            --text-light: #6B7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            background: #F9FAFB;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            padding: 60px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: clamp(1rem, 2vw, 1.2rem);
+            opacity: 0.95;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: -30px auto 80px;
+            padding: 0 24px;
+        }
+
+        /* Active Tools Section */
+        .section-header {
+            margin-bottom: 24px;
+            margin-top: 48px;
+        }
+
+        .section-label {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Tools Grid */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tool-card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .tool-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .tool-card.disabled:hover {
+            transform: none;
+            box-shadow: none;
+            border-color: #E5E7EB;
+        }
+
+        .tool-header {
+            padding: 28px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+        }
+
+        .tool-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin-bottom: 16px;
+        }
+
+        .tool-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .tool-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .tool-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-popular {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3B82F6;
+        }
+
+        .badge-new {
+            background: rgba(139, 92, 246, 0.1);
+            color: #8B5CF6;
+        }
+
+        .badge-coming {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6B7280;
+        }
+
+        .tool-footer {
+            padding: 16px 28px;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .tool-link {
+            color: var(--secondary);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .tool-link:hover {
+            gap: 10px;
+        }
+
+        /* Special gradient icons for different tools */
+        .icon-blue {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+        }
+
+        .icon-purple {
+            background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+        }
+
+        .icon-pink {
+            background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);
+        }
+
+        .icon-green {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+
+        .icon-orange {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+
+        .icon-gray {
+            background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 48px 24px;
+            }
+
+            .nav-links {
+                gap: 16px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                margin-top: -20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .nav-links a {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">Cactus Labs</a>
+            <div class="nav-links">
+                <a href="gogwan.html">← 공무중이상무</a>
+                <a href="/">홈</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <h1>AI 업무도구</h1>
+        <p>공무원 업무를 AI로 자동화하는 전문 도구</p>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Active Tools -->
+        <div class="section-header">
+            <div class="section-label">Available Now</div>
+            <h2 class="section-title">사용 가능한 도구</h2>
+        </div>
+
+        <div class="tools-grid">
+            <!-- AI 보도자료 작성 -->
+            <div class="tool-card" onclick="location.href='create.html'">
+                <div class="tool-header">
+                    <div class="tool-icon icon-blue">📰</div>
+                    <h3>AI 보도자료 작성</h3>
+                    <p>전문적인 보도자료를 AI가 자동으로 생성합니다. 정책, 행사, 발표 등 다양한 카테고리 지원</p>
+                    <span class="tool-badge badge-popular">인기</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- PDF → PPT 변환 -->
+            <div class="tool-card" onclick="location.href='pdf-to-ppt.html'">
+                <div class="tool-header">
+                    <div class="tool-icon icon-purple">📊</div>
+                    <h3>PDF → PPT 변환</h3>
+                    <p>PDF 파일을 업로드하면 AI가 분석하여 프레젠테이션용 PPT로 자동 변환</p>
+                    <span class="tool-badge badge-new">NEW</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- 현수막 디자인 생성 -->
+            <div class="tool-card" onclick="location.href='banner-maker.html'">
+                <div class="tool-header">
+                    <div class="tool-icon icon-pink">🎨</div>
+                    <h3>현수막 디자인 생성</h3>
+                    <p>주제에 맞는 전문적인 현수막 디자인을 AI가 자동으로 생성. 고해상도 PNG 다운로드</p>
+                    <span class="tool-badge badge-new">NEW</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- 실시간 속기 -->
+            <div class="tool-card disabled">
+                <div class="tool-header">
+                    <div class="tool-icon icon-green">🎤</div>
+                    <h3>실시간 속기</h3>
+                    <p>회의나 강의 중 실시간으로 음성을 텍스트로 변환. 동시에 여러 화자 구분</p>
+                    <span class="tool-badge badge-coming">준비중</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link" style="color: #9CA3AF;">곧 만나요 →</span>
+                </div>
+            </div>
+
+            <!-- 오디오 파일 변환 -->
+            <div class="tool-card disabled">
+                <div class="tool-header">
+                    <div class="tool-icon icon-orange">🎧</div>
+                    <h3>오디오 파일 변환</h3>
+                    <p>녹음된 음성 파일을 업로드하면 AI가 자동으로 텍스트 변환 및 화자 분리</p>
+                    <span class="tool-badge badge-coming">준비중</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link" style="color: #9CA3AF;">곧 만나요 →</span>
+                </div>
+            </div>
+
+            <!-- 회의록 자동 생성 -->
+            <div class="tool-card disabled">
+                <div class="tool-header">
+                    <div class="tool-icon icon-purple">📝</div>
+                    <h3>회의록 자동 생성</h3>
+                    <p>속기된 텍스트를 AI가 분석하여 전문적인 회의록 형식으로 자동 정리</p>
+                    <span class="tool-badge badge-coming">준비중</span>
+                </div>
+                <div class="tool-footer">
+                    <span class="tool-link" style="color: #9CA3AF;">곧 만나요 →</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

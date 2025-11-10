@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>평생운 - GOGWAN</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="history.back()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+                </svg>
+            </button>
+            <h1 class="page-title">평생운</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 소개 카드 -->
+        <div class="input-card" style="background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); color: white; border: none;">
+            <div style="text-align: center;">
+                <div style="font-size: 2em; margin-bottom: 8px;">🔮</div>
+                <h2 style="font-size: 1.25em; font-weight: 700; margin-bottom: 8px;">사주팔자로 보는 평생운</h2>
+                <p style="font-size: 0.875em; opacity: 0.9;">생년월일시를 입력하시면 사주팔자를 분석하여<br>평생의 운세를 자세히 풀이해드립니다</p>
+            </div>
+        </div>
+
+        <!-- 생년월일 입력 -->
+        <div class="input-card">
+            <div class="input-label">생년월일 <span class="required">*</span></div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
+                <select id="birthYear" style="width: 100%; padding: 12px 16px; border: none; background: #F9FAFB; border-radius: 8px; font-size: 1em; font-family: inherit;">
+                    <option value="">년도 선택</option>
+                </select>
+                <select id="birthMonth" style="width: 100%; padding: 12px 16px; border: none; background: #F9FAFB; border-radius: 8px; font-size: 1em; font-family: inherit;">
+                    <option value="">월</option>
+                    <option value="1">1월</option>
+                    <option value="2">2월</option>
+                    <option value="3">3월</option>
+                    <option value="4">4월</option>
+                    <option value="5">5월</option>
+                    <option value="6">6월</option>
+                    <option value="7">7월</option>
+                    <option value="8">8월</option>
+                    <option value="9">9월</option>
+                    <option value="10">10월</option>
+                    <option value="11">11월</option>
+                    <option value="12">12월</option>
+                </select>
+                <select id="birthDay" style="width: 100%; padding: 12px 16px; border: none; background: #F9FAFB; border-radius: 8px; font-size: 1em; font-family: inherit;">
+                    <option value="">일</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 시간 입력 -->
+        <div class="input-card">
+            <div class="input-label">태어난 시간 <span class="required">*</span></div>
+            <select id="birthHour" style="width: 100%; padding: 12px 16px; border: none; background: #F9FAFB; border-radius: 8px; font-size: 1em; font-family: inherit;">
+                <option value="">시간을 선택하세요</option>
+                <option value="0">자시 (23:30 - 01:29)</option>
+                <option value="1">축시 (01:30 - 03:29)</option>
+                <option value="2">인시 (03:30 - 05:29)</option>
+                <option value="3">묘시 (05:30 - 07:29)</option>
+                <option value="4">진시 (07:30 - 09:29)</option>
+                <option value="5">사시 (09:30 - 11:29)</option>
+                <option value="6">오시 (11:30 - 13:29)</option>
+                <option value="7">미시 (13:30 - 15:29)</option>
+                <option value="8">신시 (15:30 - 17:29)</option>
+                <option value="9">유시 (17:30 - 19:29)</option>
+                <option value="10">술시 (19:30 - 21:29)</option>
+                <option value="11">해시 (21:30 - 23:29)</option>
+            </select>
+            <div class="input-hint">정확한 시간을 모르시면 대략적인 시간대를 선택해주세요</div>
+        </div>
+
+        <!-- 성별 선택 -->
+        <div class="input-card">
+            <div class="input-label">성별 <span class="required">*</span></div>
+            <div class="category-chips">
+                <div class="category-chip selected" data-gender="male">남성</div>
+                <div class="category-chip" data-gender="female">여성</div>
+            </div>
+        </div>
+
+        <!-- 양력/음력 선택 -->
+        <div class="input-card">
+            <div class="input-label">양력/음력 <span class="required">*</span></div>
+            <div class="category-chips">
+                <div class="category-chip selected" data-calendar="solar">양력</div>
+                <div class="category-chip" data-calendar="lunar">음력</div>
+            </div>
+            <div class="input-hint">생년월일이 양력인지 음력인지 선택해주세요</div>
+        </div>
+
+        <!-- 생성 버튼 -->
+        <button class="generate-button" id="generateButton">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+            </svg>
+            평생운 보기
+        </button>
+
+        <!-- 사주팔자 카드 -->
+        <div class="result-card" id="sajuCard" style="display: none;">
+            <div class="result-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#8B5CF6">
+                    <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                </svg>
+                <span style="font-size: 1.125em; font-weight: 600; color: #111827;">사주팔자</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px; background: #F9FAFB; border-radius: 8px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 0.75em; color: #6B7280; margin-bottom: 4px;">년주</div>
+                    <div id="yearPillar" style="font-size: 1.25em; font-weight: 700; color: #111827;"></div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.75em; color: #6B7280; margin-bottom: 4px;">월주</div>
+                    <div id="monthPillar" style="font-size: 1.25em; font-weight: 700; color: #111827;"></div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.75em; color: #6B7280; margin-bottom: 4px;">일주</div>
+                    <div id="dayPillar" style="font-size: 1.25em; font-weight: 700; color: #111827;"></div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 0.75em; color: #6B7280; margin-bottom: 4px;">시주</div>
+                    <div id="hourPillar" style="font-size: 1.25em; font-weight: 700; color: #111827;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 평생운 해석 -->
+        <div class="result-card" id="resultCard" style="display: none;">
+            <div class="result-header">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#8B5CF6">
+                    <path d="M12 3C7.03 3 3 7.03 3 12S7.03 21 12 21 21 16.97 21 12 16.97 3 12 3M12 19C8.13 19 5 15.87 5 12S8.13 5 12 5 19 8.13 19 12 15.87 19 12 19M12.5 8H11V14L15.75 16.85L16.5 15.62L12.5 13.25V8Z"/>
+                </svg>
+                <span style="font-size: 1.125em; font-weight: 600; color: #111827;">평생운 해석</span>
+            </div>
+            <div class="result-content" id="resultContent" style="line-height: 1.8;"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedGender = 'male';
+        let selectedCalendar = 'solar';
+        let currentYear = new Date().getFullYear();
+
+        // 생년 드롭다운 초기화 (1940년부터 현재 연도까지)
+        const birthYearSelect = document.getElementById('birthYear');
+        for (let year = currentYear; year >= 1940; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year + '년';
+            birthYearSelect.appendChild(option);
+        }
+        // 기본값: 33살 (1992년)
+        birthYearSelect.value = 1992;
+
+        // 일자 드롭다운 업데이트 함수
+        function updateDayOptions() {
+            const month = parseInt(document.getElementById('birthMonth').value);
+            const year = parseInt(document.getElementById('birthYear').value);
+            const daySelect = document.getElementById('birthDay');
+
+            if (!month) {
+                daySelect.innerHTML = '<option value="">일</option>';
+                return;
+            }
+
+            // 해당 월의 일수 계산
+            const daysInMonth = new Date(year || 2000, month, 0).getDate();
+
+            const currentDay = daySelect.value;
+            daySelect.innerHTML = '<option value="">일</option>';
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day + '일';
+                daySelect.appendChild(option);
+            }
+
+            // 이전 선택값 복원 (가능한 경우)
+            if (currentDay && parseInt(currentDay) <= daysInMonth) {
+                daySelect.value = currentDay;
+            }
+        }
+
+        // 월/년 변경시 일자 업데이트
+        document.getElementById('birthMonth').addEventListener('change', updateDayOptions);
+        document.getElementById('birthYear').addEventListener('change', updateDayOptions);
+
+        // 성별 선택
+        document.querySelectorAll('[data-gender]').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('[data-gender]').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedGender = chip.dataset.gender;
+            });
+        });
+
+        // 양력/음력 선택
+        document.querySelectorAll('[data-calendar]').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('[data-calendar]').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedCalendar = chip.dataset.calendar;
+            });
+        });
+
+        // 평생운 생성
+        document.getElementById('generateButton').addEventListener('click', async () => {
+            const birthYear = parseInt(document.getElementById('birthYear').value);
+            const birthMonth = parseInt(document.getElementById('birthMonth').value);
+            const birthDay = parseInt(document.getElementById('birthDay').value);
+            const birthHour = document.getElementById('birthHour').value;
+
+            // 유효성 검사
+            if (!birthYear || !birthMonth || !birthDay) {
+                alert('생년월일을 모두 입력해주세요');
+                return;
+            }
+
+            if (!birthHour) {
+                alert('태어난 시간을 선택해주세요');
+                return;
+            }
+
+            if (birthYear < 1900 || birthYear > 2100) {
+                alert('올바른 연도를 입력해주세요 (1900-2100)');
+                return;
+            }
+
+            if (birthMonth < 1 || birthMonth > 12) {
+                alert('올바른 월을 입력해주세요 (1-12)');
+                return;
+            }
+
+            if (birthDay < 1 || birthDay > 31) {
+                alert('올바른 일을 입력해주세요 (1-31)');
+                return;
+            }
+
+            const button = document.getElementById('generateButton');
+            button.disabled = true;
+            button.innerHTML = `
+                <div class="spinner"></div>
+                평생운 분석 중...
+            `;
+
+            try {
+                const response = await fetch('https://gogwan-backend-818506848351.asia-northeast3.run.app/api/saju-lifetime', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        birth_year: birthYear,
+                        birth_month: birthMonth,
+                        birth_day: birthDay,
+                        birth_hour: parseInt(birthHour),
+                        gender: selectedGender,
+                        is_lunar: selectedCalendar === 'lunar'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || '분석에 실패했습니다');
+                }
+
+                // 사주팔자 표시
+                document.getElementById('yearPillar').textContent = data.saju.year_pillar;
+                document.getElementById('monthPillar').textContent = data.saju.month_pillar;
+                document.getElementById('dayPillar').textContent = data.saju.day_pillar;
+                document.getElementById('hourPillar').textContent = data.saju.hour_pillar;
+                document.getElementById('sajuCard').style.display = 'block';
+
+                // 평생운 해석 표시
+                document.getElementById('resultContent').textContent = data.interpretation;
+                document.getElementById('resultCard').style.display = 'block';
+
+                // 결과로 스크롤
+                document.getElementById('sajuCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } catch (error) {
+                alert('분석 실패: ' + error.message);
+                console.error(error);
+            } finally {
+                button.disabled = false;
+                button.innerHTML = `
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <path d="M12 17.27L18.18 21L16.54 13.97L22 9.24L14.81 8.63L12 2L9.19 8.63L2 9.24L7.46 13.97L5.82 21L12 17.27Z"/>
+                    </svg>
+                    평생운 보기
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

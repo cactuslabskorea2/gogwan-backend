@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>손이빠른토끼씨 - 한글속기자격증 시험 준비</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0A0E27;
+            --secondary: #6366F1;
+            --accent: #8B5CF6;
+            --orange: #F97316;
+            --orange-light: #FB923C;
+            --text: #1F2937;
+            --text-light: #6B7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: var(--text);
+            background: #F9FAFB;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            border-bottom: 1px solid #E5E7EB;
+            padding: 16px 0;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--secondary);
+        }
+
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+            padding: 80px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .hero-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-cta {
+            display: inline-block;
+            background: white;
+            color: var(--orange);
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Services Section */
+        .services {
+            max-width: 1200px;
+            margin: 60px auto 80px;
+            padding: 0 24px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .section-label {
+            font-size: 0.875rem;
+            color: var(--orange);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 2.5rem);
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -1px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .service-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            border-color: var(--orange);
+            box-shadow: 0 12px 30px rgba(249, 115, 22, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .service-header {
+            padding: 32px;
+            background: linear-gradient(135deg, #F9FAFB 0%, #FFFFFF 100%);
+        }
+
+        .service-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, var(--orange), var(--orange-light));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .service-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .service-card p {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+        }
+
+        .service-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--orange);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .service-footer {
+            padding: 20px 32px;
+            border-top: 1px solid #F3F4F6;
+        }
+
+        .service-link {
+            color: var(--orange);
+            font-weight: 600;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: gap 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .service-link:hover {
+            gap: 10px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: var(--primary);
+            padding: 80px 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-section p {
+            font-size: 1.15rem;
+            opacity: 0.85;
+            margin-bottom: 32px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--orange);
+            color: white;
+            padding: 16px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .cta-button:hover {
+            background: var(--orange-light);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(249, 115, 22, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero {
+                padding: 60px 24px;
+            }
+
+            .services {
+                margin-top: 40px;
+            }
+
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="/" class="logo">Cactus Labs</a>
+            <a href="/" class="back-link">← 홈으로</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-icon">🐰⚡</div>
+        <h1>손이빠른토끼씨</h1>
+        <p>한글속기자격증 시험 준비를 위한 AI 맞춤 학습 플랫폼</p>
+        <a href="#services" class="hero-cta">학습 시작하기 →</a>
+    </section>
+
+    <!-- Services -->
+    <section class="services" id="services">
+        <div class="section-header">
+            <div class="section-label">Learning Tools</div>
+            <h2 class="section-title">속기 학습 도구</h2>
+        </div>
+
+        <div class="services-grid">
+            <!-- 속기 연습 -->
+            <div class="service-card" onclick="alert('준비 중입니다')">
+                <div class="service-header">
+                    <div class="service-icon">⌨️</div>
+                    <h3>속기 연습</h3>
+                    <p>실제 시험과 동일한 환경에서 속기 연습. 타수 측정 및 정확도 분석</p>
+                    <span class="service-badge">인기</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- 모의고사 -->
+            <div class="service-card" onclick="alert('준비 중입니다')">
+                <div class="service-header">
+                    <div class="service-icon">📝</div>
+                    <h3>AI 모의고사</h3>
+                    <p>실제 시험 난이도와 유형을 분석한 AI 생성 모의고사. 급수별 맞춤 문제</p>
+                    <span class="service-badge">NEW</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+
+            <!-- 학습 분석 -->
+            <div class="service-card" onclick="alert('준비 중입니다')">
+                <div class="service-header">
+                    <div class="service-icon">📊</div>
+                    <h3>학습 분석 리포트</h3>
+                    <p>AI가 학습 데이터를 분석하여 약점 파악 및 맞춤 학습 계획 제공</p>
+                    <span class="service-badge">NEW</span>
+                </div>
+                <div class="service-footer">
+                    <span class="service-link">시작하기 →</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>지금 바로 시작하세요</h2>
+        <p>한글속기자격증, AI와 함께 준비하세요</p>
+        <a href="#services" class="cta-button">무료로 시작하기 →</a>
+    </section>
+</body>
+</html>

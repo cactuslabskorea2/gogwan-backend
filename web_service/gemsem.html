@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GemSem - AI 교육 콘텐츠 제작 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-sm font-medium;
+        }
+        .status-uploaded {
+            @apply bg-blue-100 text-blue-800;
+        }
+        .status-processing {
+            @apply bg-yellow-100 text-yellow-800;
+        }
+        .status-completed {
+            @apply bg-green-100 text-green-800;
+        }
+        .status-failed {
+            @apply bg-red-100 text-red-800;
+        }
+        .concept-card {
+            @apply border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow;
+        }
+        .concept-verified {
+            @apply border-green-300 bg-green-50;
+        }
+        .concept-unverified {
+            @apply border-gray-200 bg-white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">GemSem</h1>
+                    <p class="text-gray-600 mt-1">AI 교육 콘텐츠 제작 시스템 (MVP)</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button onclick="showUploadModal()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+                        📚 교과서 업로드
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Tabs -->
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="-mb-px flex space-x-8">
+                <button onclick="switchTab('textbooks')" id="tab-textbooks" class="tab-button border-b-2 border-indigo-500 text-indigo-600 py-4 px-1 text-sm font-medium">
+                    교과서 목록
+                </button>
+                <button onclick="switchTab('concepts')" id="tab-concepts" class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                    개념 관리
+                </button>
+            </nav>
+        </div>
+
+        <!-- Textbooks Tab -->
+        <div id="panel-textbooks" class="tab-panel">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">업로드된 교과서</h2>
+                </div>
+                <div id="textbooks-list" class="divide-y divide-gray-200">
+                    <!-- Textbooks will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Concepts Tab -->
+        <div id="panel-concepts" class="tab-panel hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">추출된 개념</h2>
+                    <p class="text-sm text-gray-600 mt-1">교과서를 선택하여 개념을 확인하세요</p>
+                </div>
+                <div id="concepts-list" class="p-6">
+                    <div class="text-center text-gray-500 py-8">
+                        교과서를 선택하면 개념이 표시됩니다
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-2xl w-full mx-4 shadow-xl">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">교과서 업로드</h3>
+            </div>
+            <div class="px-6 py-4">
+                <form id="upload-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">제목</label>
+                        <input type="text" id="textbook-title" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="예: 고등학교 수학 1" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">학년</label>
+                            <select id="textbook-grade" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">선택하세요</option>
+                                <option value="중1">중1</option>
+                                <option value="중2">중2</option>
+                                <option value="중3">중3</option>
+                                <option value="고1">고1</option>
+                                <option value="고2">고2</option>
+                                <option value="고3">고3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">과목</label>
+                            <select id="textbook-subject" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                                <option value="">선택하세요</option>
+                                <option value="수학">수학</option>
+                                <option value="영어">영어</option>
+                                <option value="과학">과학</option>
+                                <option value="국어">국어</option>
+                                <option value="사회">사회</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">출판사</label>
+                        <input type="text" id="textbook-publisher" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="예: 천재교육" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">PDF 파일</label>
+                        <input type="file" id="textbook-pdf" accept=".pdf" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <p class="text-xs text-gray-500 mt-1">⚠️ 현재 샘플 버전으로 실제 PDF는 처리하지 않고 샘플 데이터를 사용합니다</p>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+                <button onclick="hideUploadModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    취소
+                </button>
+                <button onclick="uploadTextbook()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    업로드
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-sm">
+            <div class="flex items-center space-x-3">
+                <svg class="animate-spin h-8 w-8 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div>
+                    <p class="text-lg font-semibold text-gray-900">처리 중...</p>
+                    <p class="text-sm text-gray-600" id="loading-message">잠시만 기다려주세요</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API 엔드포인트
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:8000'
+            : 'https://gogwan-backend-818506848351.asia-northeast3.run.app';
+
+        let currentTextbookId = null;
+
+        // 페이지 로드 시 교과서 목록 로드
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTextbooks();
+        });
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById(`tab-${tabName}`).classList.remove('border-transparent', 'text-gray-500');
+            document.getElementById(`tab-${tabName}`).classList.add('border-indigo-500', 'text-indigo-600');
+
+            // Update panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+        }
+
+        // Modal functions
+        function showUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function hideUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+            document.getElementById('upload-form').reset();
+        }
+
+        function showLoading(message = '처리 중...') {
+            document.getElementById('loading-message').textContent = message;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        // Upload textbook
+        async function uploadTextbook() {
+            const title = document.getElementById('textbook-title').value;
+            const grade = document.getElementById('textbook-grade').value;
+            const subject = document.getElementById('textbook-subject').value;
+            const publisher = document.getElementById('textbook-publisher').value;
+            const pdfFile = document.getElementById('textbook-pdf').files[0];
+
+            if (!title || !grade || !subject || !publisher || !pdfFile) {
+                alert('모든 필드를 입력해주세요');
+                return;
+            }
+
+            showLoading('교과서 업로드 중...');
+            hideUploadModal();
+
+            try {
+                // PDF를 Base64로 인코딩 (실제로는 더미 데이터 사용)
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Data = e.target.result.split(',')[1];
+
+                    const response = await fetch(`${API_URL}/api/gemsem/textbooks/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            title: title,
+                            grade_level: grade,
+                            subject: subject,
+                            publisher: publisher,
+                            pdf_base64: base64Data
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        alert(`✅ ${data.message}\n파일 크기: ${data.pdf_size_mb}MB`);
+                        loadTextbooks();
+                    } else {
+                        alert('❌ 업로드 실패: ' + data.detail);
+                    }
+
+                    hideLoading();
+                };
+                reader.readAsDataURL(pdfFile);
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('❌ 업로드 중 오류가 발생했습니다: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // Load textbooks
+        async function loadTextbooks() {
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks`);
+                const data = await response.json();
+
+                const listContainer = document.getElementById('textbooks-list');
+
+                if (data.textbooks.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="px-6 py-12 text-center text-gray-500">
+                            <p class="text-lg">아직 업로드된 교과서가 없습니다</p>
+                            <p class="text-sm mt-2">우측 상단의 "교과서 업로드" 버튼을 클릭하여 시작하세요</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                listContainer.innerHTML = data.textbooks.map(textbook => `
+                    <div class="px-6 py-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-medium text-gray-900">${textbook.title}</h3>
+                                <div class="mt-1 flex items-center space-x-4 text-sm text-gray-600">
+                                    <span>📚 ${textbook.grade_level} - ${textbook.subject}</span>
+                                    <span>📖 ${textbook.publisher}</span>
+                                    <span>💾 ${(textbook.pdf_size_bytes / 1024 / 1024).toFixed(2)}MB</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="status-badge status-${textbook.status}">${getStatusText(textbook.status)}</span>
+                                ${textbook.status === 'uploaded' ? `
+                                    <button onclick="analyzeTextbook('${textbook.id}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">
+                                        🤖 분석 시작
+                                    </button>
+                                ` : ''}
+                                ${textbook.status === 'completed' ? `
+                                    <button onclick="viewConcepts('${textbook.id}')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                                        📖 개념 보기 (${textbook.concepts_count || 0}개)
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Load textbooks error:', error);
+            }
+        }
+
+        // Analyze textbook
+        async function analyzeTextbook(textbookId) {
+            if (!confirm('교과서 분석을 시작하시겠습니까?\n(Gemini 2.0 Flash로 개념을 추출합니다)')) {
+                return;
+            }
+
+            showLoading('개념 추출 중... (30초~1분 소요)');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks/${textbookId}/analyze`, {
+                    method: 'POST'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`✅ ${data.message}`);
+                    loadTextbooks();
+                } else {
+                    alert('❌ 분석 실패: ' + data.detail);
+                }
+
+                hideLoading();
+
+            } catch (error) {
+                console.error('Analyze error:', error);
+                alert('❌ 분석 중 오류가 발생했습니다: ' + error.message);
+                hideLoading();
+            }
+        }
+
+        // View concepts
+        async function viewConcepts(textbookId) {
+            currentTextbookId = textbookId;
+            switchTab('concepts');
+            showLoading('개념 불러오는 중...');
+
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/textbooks/${textbookId}/concepts`);
+                const data = await response.json();
+
+                const listContainer = document.getElementById('concepts-list');
+
+                if (data.concepts.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            추출된 개념이 없습니다
+                        </div>
+                    `;
+                    hideLoading();
+                    return;
+                }
+
+                listContainer.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${data.concepts.map(concept => `
+                            <div class="concept-card ${concept.verified ? 'concept-verified' : 'concept-unverified'}">
+                                <div class="flex items-start justify-between mb-2">
+                                    <h3 class="text-lg font-semibold text-gray-900">${concept.name}</h3>
+                                    ${concept.verified ?
+                                        '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full">✓ 검수완료</span>' :
+                                        `<button onclick="verifyConcept('${concept.id}')" class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300">검수하기</button>`
+                                    }
+                                </div>
+                                <p class="text-gray-700 mb-2">${concept.description}</p>
+                                ${concept.formula ? `
+                                    <div class="bg-gray-50 border border-gray-200 rounded px-3 py-2 mb-2">
+                                        <code class="text-indigo-600 font-mono text-sm">${concept.formula}</code>
+                                    </div>
+                                ` : ''}
+                                <div class="flex items-center space-x-3 text-sm text-gray-600">
+                                    <span>📂 ${concept.chapter}</span>
+                                    <span>📊 난이도: ${concept.difficulty}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                hideLoading();
+
+            } catch (error) {
+                console.error('Load concepts error:', error);
+                hideLoading();
+            }
+        }
+
+        // Verify concept
+        async function verifyConcept(conceptId) {
+            try {
+                const response = await fetch(`${API_URL}/api/gemsem/concepts/${conceptId}/verify`, {
+                    method: 'PUT'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reload concepts
+                    if (currentTextbookId) {
+                        viewConcepts(currentTextbookId);
+                    }
+                }
+
+            } catch (error) {
+                console.error('Verify concept error:', error);
+            }
+        }
+
+        // Helper functions
+        function getStatusText(status) {
+            const statusMap = {
+                'uploaded': '업로드 완료',
+                'processing': '처리 중',
+                'completed': '완료',
+                'failed': '실패'
+            };
+            return statusMap[status] || status;
+        }
+    </script>
+</body>
+</html>

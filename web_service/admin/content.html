@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>콘텐츠 관리 - GOGWAN Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1600px; margin: 0 auto; }
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .header h1 { color: #667eea; font-size: 2.5em; margin-bottom: 10px; }
+        .header p { color: #666; font-size: 1.1em; }
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.8em;
+        }
+        .category-section {
+            margin-bottom: 40px;
+        }
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .category-header:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+        .category-icon {
+            font-size: 2.5em;
+        }
+        .category-info h3 {
+            color: #333;
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+        .category-info p {
+            color: #666;
+            font-size: 0.95em;
+        }
+        .category-stats {
+            margin-left: auto;
+            text-align: right;
+        }
+        .category-stats .count {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+        }
+        .category-stats .label {
+            font-size: 0.85em;
+            color: #666;
+        }
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .services-table thead {
+            background: #f8f9fa;
+        }
+        .services-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .services-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .services-table tbody tr {
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .services-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        .service-name {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .parent-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .parent-link:hover {
+            text-decoration: underline;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        .badge.gemini-2-flash { background: #e8f5e9; color: #2e7d32; }
+        .badge.gemini-25-flash-image { background: #dbeafe; color: #1e40af; }
+        .badge.gemini-25-pro { background: #fef3c7; color: #92400e; }
+        .badge.firestore { background: #ffe0b2; color: #e65100; }
+        .badge.analytics { background: #eff6ff; color: #2563eb; }
+        .icon-link {
+            color: #667eea;
+            font-size: 1.2em;
+            margin-left: 5px;
+        }
+        .api-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .summary-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .summary-card .label {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        @media (max-width: 768px) {
+            .services-table {
+                font-size: 0.9em;
+            }
+            .services-table th,
+            .services-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 콘텐츠 관리</h1>
+            <p>서비스 페이지 계층 구조 및 API 매핑</p>
+            <a href="index.html" class="back-link">← 관리자 메인</a>
+        </div>
+
+        <!-- 요약 통계 -->
+        <div class="section">
+            <h2>📊 서비스 요약</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="label">총 서비스 페이지</div>
+                    <div class="value" id="totalPages">-</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">상위 카테고리</div>
+                    <div class="value">5</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Gemini API 사용</div>
+                    <div class="value" id="geminiCount">-</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Analytics 연동</div>
+                    <div class="value" id="analyticsCount">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 서비스 계층 구조 -->
+        <div class="section" id="servicesContainer">
+            <h2>🗂️ 서비스 계층 구조</h2>
+        </div>
+    </div>
+
+    <script>
+        const serviceStructure = [
+            {
+                id: 'landing',
+                name: '랜딩 페이지',
+                icon: '🏠',
+                description: '서비스 소개 및 메인 페이지',
+                color: '#dbeafe',
+                pages: [
+                    { name: 'index', title: '메인 홈', parent: null, apis: [], analytics: true },
+                    { name: 'gogwan', title: '고관 소개', parent: 'index', apis: [], analytics: true },
+                    { name: 'jamssam', title: '잠쌤 소개', parent: 'index', apis: [], analytics: true },
+                    { name: 'fast-rabbit', title: '패스트 래빗', parent: 'index', apis: [], analytics: true }
+                ]
+            },
+            {
+                id: 'smart-work',
+                name: 'AI 업무도구',
+                icon: '💼',
+                description: '보도자료, 문서 변환 등 업무 생산성 도구',
+                color: '#dcfce7',
+                pages: [
+                    { name: 'smart-work', title: 'AI 업무도구 메인', parent: 'index', apis: [], analytics: true },
+                    { name: 'create', title: 'AI 보도자료 작성', parent: 'smart-work', apis: ['Gemini 2.0 Flash'], analytics: true },
+                    { name: 'press-release', title: '보도자료 목록', parent: 'smart-work', apis: ['Firestore'], analytics: true },
+                    { name: 'press-release-result', title: '보도자료 결과', parent: 'press-release', apis: ['Firestore'], analytics: true },
+                    { name: 'banner-maker', title: '배너 메이커', parent: 'smart-work', apis: ['Gemini 2.5 Flash Image'], analytics: true },
+                    { name: 'pdf-to-ppt', title: 'PDF→PPT 변환', parent: 'smart-work', apis: ['Gemini 2.0 Flash'], analytics: true }
+                ]
+            },
+            {
+                id: 'ai-image',
+                name: 'AI 이미지',
+                icon: '🎨',
+                description: '이미지 생성, 편집, 스타일 변환',
+                color: '#e0e7ff',
+                pages: [
+                    { name: 'ai-image', title: 'AI 이미지 메인', parent: 'index', apis: [], analytics: true },
+                    { name: 'background-remover', title: '배경 제거', parent: 'ai-image', apis: ['Gemini 2.5 Flash Image'], analytics: true },
+                    { name: 'id-photo', title: '증명사진 생성', parent: 'ai-image', apis: ['Gemini 2.5 Flash Image'], analytics: true },
+                    { name: 'style-select', title: '스타일 선택', parent: 'ai-image', apis: [], analytics: true },
+                    { name: 'style-transfer', title: '스타일 전환', parent: 'style-select', apis: ['Gemini 2.5 Flash Image'], analytics: true },
+                    { name: 'ghibli-style', title: '지브리 스타일', parent: 'style-select', apis: ['Gemini 2.5 Flash Image'], analytics: true }
+                ]
+            },
+            {
+                id: 'lounge',
+                name: '라운지',
+                icon: '🎮',
+                description: 'MBTI, 운세 등 재미 콘텐츠',
+                color: '#fce7f3',
+                pages: [
+                    { name: 'lounge', title: '라운지 메인', parent: 'index', apis: [], analytics: true },
+                    { name: 'mbti-test', title: 'MBTI 테스트', parent: 'lounge', apis: [], analytics: true },
+                    { name: 'saju-lifetime', title: '평생운', parent: 'lounge', apis: ['Gemini 2.0 Flash'], analytics: true },
+                    { name: 'saju-yearly', title: '신년운세', parent: 'lounge', apis: ['Gemini 2.0 Flash'], analytics: true }
+                ]
+            },
+            {
+                id: 'learning',
+                name: '학습도구',
+                icon: '📚',
+                description: 'AI 기반 학습 및 문제풀이',
+                color: '#ffedd5',
+                pages: [
+                    { name: 'ai-problem-solver', title: 'AI 문제풀이', parent: 'index', apis: ['Gemini 2.5 Pro'], analytics: true },
+                    { name: 'gemsem', title: '젬셈 AI 교육 (MVP)', parent: 'index', apis: ['Gemini 2.0 Flash'], analytics: false },
+                    { name: 'gemsem-full', title: '젬셈 AI 교육 (Full)', parent: 'index', apis: ['Gemini 2.0 Flash'], analytics: false },
+                    { name: 'lecture-generator', title: 'AIVOCA 강의 생성기', parent: 'admin', apis: ['Gemini 2.0 Flash', 'TTS'], analytics: true }
+                ]
+            }
+        ];
+
+        const container = document.getElementById('servicesContainer');
+
+        // 통계 계산
+        let totalPages = 0;
+        let geminiCount = 0;
+        let analyticsCount = 0;
+
+        serviceStructure.forEach(category => {
+            totalPages += category.pages.length;
+            category.pages.forEach(page => {
+                if (page.apis.some(api => api.includes('Gemini'))) geminiCount++;
+                if (page.analytics) analyticsCount++;
+            });
+        });
+
+        document.getElementById('totalPages').textContent = totalPages;
+        document.getElementById('geminiCount').textContent = geminiCount;
+        document.getElementById('analyticsCount').textContent = analyticsCount;
+
+        // 카테고리별 테이블 생성
+        serviceStructure.forEach(category => {
+            const section = document.createElement('div');
+            section.className = 'category-section';
+
+            const header = document.createElement('div');
+            header.className = 'category-header';
+            header.innerHTML = `
+                <div class="category-icon">${category.icon}</div>
+                <div class="category-info">
+                    <h3>${category.name}</h3>
+                    <p>${category.description}</p>
+                </div>
+                <div class="category-stats">
+                    <div class="count">${category.pages.length}</div>
+                    <div class="label">페이지</div>
+                </div>
+            `;
+
+            const table = document.createElement('table');
+            table.className = 'services-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">서비스명</th>
+                        <th style="width: 20%;">상위 페이지</th>
+                        <th style="width: 35%;">사용 API</th>
+                        <th style="width: 15%;">파일명</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+
+            const tbody = table.querySelector('tbody');
+            category.pages.forEach(page => {
+                const row = document.createElement('tr');
+                row.onclick = () => window.open(`../${page.name}.html`, '_blank');
+
+                const parentCell = page.parent
+                    ? `<a href="../${page.parent}.html" target="_blank" class="parent-link" onclick="event.stopPropagation();">
+                        ${page.parent}.html ↗
+                       </a>`
+                    : '<span style="color: #999;">-</span>';
+
+                const apiCell = page.apis.length > 0
+                    ? `<div class="api-list">
+                        ${page.apis.map(api => {
+                            let badgeClass = 'gemini-2-flash';
+                            if (api === 'Gemini 2.5 Pro') badgeClass = 'gemini-25-pro';
+                            else if (api === 'Gemini 2.5 Flash Image') badgeClass = 'gemini-25-flash-image';
+                            else if (api === 'Gemini 2.0 Flash') badgeClass = 'gemini-2-flash';
+                            else if (api === 'Firestore') badgeClass = 'firestore';
+                            return `<span class="badge ${badgeClass}">${api}</span>`;
+                        }).join('')}
+                        ${page.analytics ? '<span class="badge analytics">📊 Analytics</span>' : ''}
+                       </div>`
+                    : page.analytics ? '<span class="badge analytics">📊 Analytics</span>' : '-';
+
+                row.innerHTML = `
+                    <td>
+                        <div class="service-name">
+                            ${page.title}
+                            <span class="icon-link">↗</span>
+                        </div>
+                    </td>
+                    <td>${parentCell}</td>
+                    <td>${apiCell}</td>
+                    <td><code>${page.name}.html</code></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            section.appendChild(header);
+            section.appendChild(table);
+            container.appendChild(section);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script type="module" src="auth-check.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOGWAN 관리자 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #333;
+            margin: 10px 0;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .menu-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .menu-card .card-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .menu-card h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .menu-card p {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .menu-card .features {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .menu-card .features ul {
+            list-style: none;
+            text-align: left;
+        }
+
+        .menu-card .features li {
+            padding: 8px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .menu-card .features li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .menu-card.analytics {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .menu-card.analytics h2,
+        .menu-card.analytics p,
+        .menu-card.analytics .features li {
+            color: white;
+        }
+
+        .menu-card.analytics .features {
+            border-top-color: rgba(255,255,255,0.3);
+        }
+
+        .menu-card.analytics .features li:before {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .menu-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="header">
+            <h1>🎛️ GOGWAN 관리자 대시보드</h1>
+            <p>서비스의 모든 기능을 관리하고 모니터링하세요</p>
+            <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+                <a href="../index.html" class="back-link">← 메인 사이트로 돌아가기</a>
+                <button onclick="adminLogout()" class="back-link" style="border: none; cursor: pointer;">🚪 로그아웃</button>
+            </div>
+        </div>
+
+        <!-- 실시간 통계 카드 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="value" id="totalVisitors">-</div>
+                <div class="label">총 방문자 (30일)</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⚡</div>
+                <div class="value" id="totalFeatures">-</div>
+                <div class="label">기능 실행 횟수</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📄</div>
+                <div class="value" id="totalPressReleases">-</div>
+                <div class="label">보도자료 개수</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📥</div>
+                <div class="value" id="totalDownloads">-</div>
+                <div class="label">다운로드 횟수</div>
+            </div>
+        </div>
+
+        <!-- 관리 메뉴 -->
+        <div class="menu-grid">
+            <!-- API 및 콘솔 관리 -->
+            <a href="api-console.html" class="menu-card analytics">
+                <div class="card-icon">🔧</div>
+                <h2>API 및 콘솔 관리</h2>
+                <p>Gemini API, Firebase, Google Cloud 통합 관리</p>
+                <div class="features">
+                    <ul>
+                        <li>Gemini API 키 발급 및 사용량</li>
+                        <li>Firebase 콘솔 바로가기</li>
+                        <li>Google Cloud 프로젝트 관리</li>
+                        <li>배포 및 호스팅 관리</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 분석 대시보드 -->
+            <a href="analytics.html" class="menu-card">
+                <div class="card-icon">📊</div>
+                <h2>분석 대시보드</h2>
+                <p>서비스 사용 현황과 통계를 확인하세요</p>
+                <div class="features">
+                    <ul>
+                        <li>페이지별 방문자 통계</li>
+                        <li>기능별 사용 현황</li>
+                        <li>시간대/요일별 트렌드 분석</li>
+                        <li>실시간 데이터 모니터링</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 보도자료 관리 -->
+            <a href="press-release.html" class="menu-card">
+                <div class="card-icon">📰</div>
+                <h2>보도자료 관리</h2>
+                <p>보도자료를 작성하고 관리하세요</p>
+                <div class="features">
+                    <ul>
+                        <li>보도자료 작성 및 수정</li>
+                        <li>카테고리별 분류</li>
+                        <li>조회수 및 통계</li>
+                        <li>AI 생성 보도자료 관리</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 애니보카 단어 관리 -->
+            <a href="anivoca-vocab.html" class="menu-card">
+                <div class="card-icon">📚</div>
+                <h2>애니보카 단어 관리</h2>
+                <p>TOEIC 단어 및 이미지 관리</p>
+                <div class="features">
+                    <ul>
+                        <li>단어 추가/수정/삭제</li>
+                        <li>이미지 업로드 관리</li>
+                        <li>CSV 일괄 업로드</li>
+                        <li>실시간 검색</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- AI 이미지 스타일 관리 -->
+            <a href="ai-style-manager.html" class="menu-card">
+                <div class="card-icon">🎨</div>
+                <h2>AI 이미지 스타일 관리</h2>
+                <p>Gemini AI 기반 이미지 스타일 변환 관리</p>
+                <div class="features">
+                    <ul>
+                        <li>레퍼런스 이미지 분석</li>
+                        <li>스타일 프롬프트 생성/수정</li>
+                        <li>스타일 타입 설정</li>
+                        <li>이미지 변환 테스트</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 사용자 데이터 -->
+            <a href="users.html" class="menu-card">
+                <div class="card-icon">👤</div>
+                <h2>사용자 관리</h2>
+                <p>사용자 데이터 및 활동을 관리하세요</p>
+                <div class="features">
+                    <ul>
+                        <li>사용자 활동 목록</li>
+                        <li>UserAgent 분석</li>
+                        <li>접속 기기 통계</li>
+                        <li>사용자 행동 패턴</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 콘텐츠 관리 -->
+            <a href="content.html" class="menu-card">
+                <div class="card-icon">🎨</div>
+                <h2>콘텐츠 관리</h2>
+                <p>서비스의 콘텐츠를 관리하세요</p>
+                <div class="features">
+                    <ul>
+                        <li>페이지 목록 및 상태</li>
+                        <li>기능별 설명 관리</li>
+                        <li>메타데이터 관리</li>
+                        <li>카테고리 설정</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 시스템 설정 -->
+            <a href="settings.html" class="menu-card">
+                <div class="card-icon">⚙️</div>
+                <h2>시스템 설정</h2>
+                <p>시스템 설정 및 환경을 확인하세요</p>
+                <div class="features">
+                    <ul>
+                        <li>환경 변수 확인</li>
+                        <li>Firebase 연결 상태</li>
+                        <li>백엔드 API 상태</li>
+                        <li>에러 로그 조회</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 교육 컨텐츠 생성기 허브 -->
+            <a href="../content-generators.html" class="menu-card analytics">
+                <div class="card-icon">🎓</div>
+                <h2>교육 컨텐츠 생성기</h2>
+                <p>AI 기반 교육 컨텐츠 자동 생성 플랫폼</p>
+                <div class="features">
+                    <ul>
+                        <li>AIVOCA 강의 생성기</li>
+                        <li>다양한 교육 컨텐츠 도구</li>
+                        <li>CSV 배치 처리 지원</li>
+                        <li>통합 관리 인터페이스</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 젬셈 AI 교육 플랫폼 -->
+            <a href="../gemsem-full.html" class="menu-card">
+                <div class="card-icon">📖</div>
+                <h2>젬셈 AI 교육 플랫폼</h2>
+                <p>교재 분석 및 문제 생성 시스템</p>
+                <div class="features">
+                    <ul>
+                        <li>PDF 교재 업로드 및 분석</li>
+                        <li>AI 개념 추출</li>
+                        <li>AI 문제 자동 생성</li>
+                        <li>유사 문제 생성 및 관리</li>
+                    </ul>
+                </div>
+            </a>
+
+            <!-- 재밌는 영상 만들기 허브 -->
+            <a href="../video-generators.html" class="menu-card analytics">
+                <div class="card-icon">🎬</div>
+                <h2>재밌는 영상 만들기</h2>
+                <p>AI 기반 영상 자동 생성 플랫폼</p>
+                <div class="features">
+                    <ul>
+                        <li>다양한 영상 생성 도구</li>
+                        <li>AI 영상 자동 생성</li>
+                        <li>템플릿 기반 편집</li>
+                        <li>통합 관리 인터페이스</li>
+                    </ul>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 실시간 통계 로드
+        async function loadStats() {
+            try {
+                // 30일 전 날짜
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                // 페이지 뷰
+                const pageViewsQuery = query(
+                    collection(db, 'analytics_page_views'),
+                    where('timestamp', '>=', thirtyDaysAgo)
+                );
+                const pageViewsSnapshot = await getDocs(pageViewsQuery);
+                document.getElementById('totalVisitors').textContent = pageViewsSnapshot.size.toLocaleString();
+
+                // 기능 사용
+                const featureUsageQuery = query(
+                    collection(db, 'analytics_feature_usage'),
+                    where('timestamp', '>=', thirtyDaysAgo)
+                );
+                const featureUsageSnapshot = await getDocs(featureUsageQuery);
+                document.getElementById('totalFeatures').textContent = featureUsageSnapshot.size.toLocaleString();
+
+                // 보도자료
+                const pressReleasesSnapshot = await getDocs(collection(db, 'press_releases'));
+                document.getElementById('totalPressReleases').textContent = pressReleasesSnapshot.size.toLocaleString();
+
+                // 다운로드
+                const downloadsQuery = query(
+                    collection(db, 'analytics_downloads'),
+                    where('timestamp', '>=', thirtyDaysAgo)
+                );
+                const downloadsSnapshot = await getDocs(downloadsQuery);
+                document.getElementById('totalDownloads').textContent = downloadsSnapshot.size.toLocaleString();
+
+            } catch (error) {
+                console.error('Stats loading error:', error);
+                document.getElementById('totalVisitors').textContent = '0';
+                document.getElementById('totalFeatures').textContent = '0';
+                document.getElementById('totalPressReleases').textContent = '0';
+                document.getElementById('totalDownloads').textContent = '0';
+            }
+        }
+
+        // 초기 로드
+        loadStats();
+    </script>
+</body>
+</html>

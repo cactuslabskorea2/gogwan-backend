@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <script type="module" src="admin/auth-check.js"></script>
+  <script src="analytics.js" type="module"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIVOCA 강의 생성기 - Cactus Labs</title>
+  <meta name="description" content="Gemini AI를 활용한 영어 단어 강의 및 음성 파일 자동 생성 도구">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #0A0E27;
+      --secondary: #6366F1;
+      --accent: #8B5CF6;
+      --text: #1F2937;
+      --text-light: #6B7280;
+      --bg: #FFFFFF;
+      --bg-alt: #F9FAFB;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --error: #EF4444;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      line-height: 1.6;
+      background: var(--bg-alt);
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--secondary);
+    }
+
+    /* Main Container */
+    .main-container {
+      margin-top: 80px;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+
+    /* Card */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Controls */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="file"],
+    select {
+      padding: 12px 16px;
+      border: 2px solid #E5E7EB;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: var(--bg-alt);
+      color: var(--text);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    /* File Upload Area */
+    .file-upload-area {
+      border: 3px dashed #D1D5DB;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      background: var(--bg-alt);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-upload-area:hover {
+      border-color: var(--secondary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .file-upload-area.dragover {
+      border-color: var(--secondary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .file-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .file-info {
+      background: #ECFDF5;
+      border-left: 4px solid var(--success);
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      display: none;
+    }
+
+    .file-info.show {
+      display: block;
+    }
+
+    /* Progress */
+    .progress-container {
+      margin-top: 24px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .status-idle { background: #E5E7EB; color: #6B7280; }
+    .status-running { background: var(--success); color: white; animation: pulse 2s infinite; }
+    .status-completed { background: var(--secondary); color: white; }
+    .status-error { background: var(--error); color: white; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .progress-bar-container {
+      background: #E5E7EB;
+      border-radius: 8px;
+      height: 40px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary) 0%, var(--accent) 100%);
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .progress-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      line-height: 40px;
+      font-weight: 600;
+      font-size: 15px;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-alt);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--secondary);
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: var(--secondary);
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Current Word Display */
+    .current-word {
+      background: #FEF3C7;
+      border-left: 4px solid var(--warning);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .current-word.show {
+      display: block;
+    }
+
+    .current-word strong {
+      color: #92400E;
+      font-size: 18px;
+    }
+
+    /* Log Container */
+    .log-container {
+      background: #1E293B;
+      color: #E2E8F0;
+      padding: 20px;
+      border-radius: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .log-entry {
+      margin-bottom: 4px;
+    }
+
+    .log-success { color: #10B981; }
+    .log-error { color: #EF4444; }
+    .log-info { color: #3B82F6; }
+
+    /* Alert Box */
+    .alert {
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid;
+    }
+
+    .alert-info {
+      background: #EFF6FF;
+      border-color: #3B82F6;
+      color: #1E40AF;
+    }
+
+    .alert-warning {
+      background: #FEF3C7;
+      border-color: var(--warning);
+      color: #92400E;
+    }
+
+    /* Download Section */
+    .download-section {
+      text-align: center;
+      padding: 32px;
+      background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+      border-radius: 12px;
+      color: white;
+      display: none;
+    }
+
+    .download-section.show {
+      display: block;
+    }
+
+    .download-section h3 {
+      font-size: 1.5rem;
+      margin-bottom: 16px;
+    }
+
+    .download-btn {
+      background: white;
+      color: var(--secondary);
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="index.html" class="logo">Cactus Labs</a>
+      <div class="nav-links">
+        <a href="index.html">홈</a>
+        <a href="admin/index.html">관리자</a>
+        <a href="lecture-generator.html">강의 생성기</a>
+        <button onclick="adminLogout()" style="background: #ef4444; border: none; color: white; padding: 8px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 0.95rem;">🚪 로그아웃</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎓 AIVOCA 강의 생성기</h1>
+      <p>Gemini AI를 활용한 영어 단어 강의 및 음성 파일 자동 생성</p>
+    </div>
+
+    <!-- Settings Card -->
+    <div class="card">
+      <h2 class="card-title">⚙️ 설정</h2>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="apiKey">Gemini API 키</label>
+          <input type="text" id="apiKey" placeholder="AIzaSy..." value="AIzaSyBNf-EYsg6R70Qtsw_mAZpjkOEwpS0EyR8">
+        </div>
+
+        <div class="form-group">
+          <label for="startIndex">시작 인덱스</label>
+          <input type="number" id="startIndex" value="0" min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="endIndex">종료 인덱스 (선택)</label>
+          <input type="number" id="endIndex" placeholder="비워두면 끝까지">
+        </div>
+      </div>
+
+      <!-- CSV Upload Area -->
+      <div class="form-group">
+        <label>CSV 파일 선택</label>
+        <div id="csvDropZone" class="file-upload-area">
+          <div class="file-icon">📄</div>
+          <div style="font-size: 16px; margin-bottom: 8px; font-weight: 600;">CSV 파일을 드래그하거나 클릭하세요</div>
+          <div style="font-size: 14px; color: var(--text-light);">영어, 한글, 품사 정보가 포함된 CSV 파일</div>
+        </div>
+        <input type="file" id="csvFile" accept=".csv" style="display: none;">
+
+        <div id="fileInfo" class="file-info">
+          <div style="font-weight: 600; margin-bottom: 8px;">✅ 파일 로드 완료</div>
+          <div style="font-size: 14px;" id="fileInfoText"></div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>💡 사용 방법:</strong> CSV 파일을 선택하고 시작 버튼을 클릭하세요. 생성된 파일은 자동으로 다운로드됩니다.
+      </div>
+
+      <button class="btn btn-primary" id="startBtn" onclick="startGeneration()" style="width: 100%;">
+        🚀 생성 시작
+      </button>
+    </div>
+
+    <!-- Progress Card -->
+    <div class="card" id="progressCard" style="display: none;">
+      <h2 class="card-title">📊 진행 상황</h2>
+
+      <div class="progress-container">
+        <span id="statusBadge" class="status-badge status-idle">대기중</span>
+        <div style="margin-bottom: 16px; color: var(--text-light);" id="statusText">준비</div>
+
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+          <div class="progress-text" id="progressText">0%</div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="currentStat">0</div>
+            <div class="stat-label">처리</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="totalStat">0</div>
+            <div class="stat-label">전체</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="errorStat">0</div>
+            <div class="stat-label">오류</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="etaStat">-</div>
+            <div class="stat-label">남은 시간</div>
+          </div>
+        </div>
+
+        <div id="currentWordDiv" class="current-word">
+          처리 중: <strong id="currentWord"></strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Log Card -->
+    <div class="card" id="logCard" style="display: none;">
+      <h2 class="card-title">📝 로그</h2>
+      <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <!-- Download Section -->
+    <div class="download-section" id="downloadSection">
+      <h3>✅ 생성 완료!</h3>
+      <p style="margin-bottom: 24px;">모든 강의와 음성 파일이 생성되었습니다.</p>
+      <button class="download-btn" onclick="downloadAllFiles()">📦 모든 파일 다운로드 (ZIP)</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+    let words = [];
+    let generatedFiles = {
+      lectures: {},
+      audio: {}
+    };
+    let progress = {
+      status: 'idle',
+      total: 0,
+      current: 0,
+      errors: 0,
+      startTime: null
+    };
+
+    // CSV 파일 드래그 앤 드롭
+    const csvDropZone = document.getElementById('csvDropZone');
+    const csvFileInput = document.getElementById('csvFile');
+
+    csvDropZone.addEventListener('click', () => {
+      csvFileInput.click();
+    });
+
+    csvDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      csvDropZone.classList.add('dragover');
+    });
+
+    csvDropZone.addEventListener('dragleave', () => {
+      csvDropZone.classList.remove('dragover');
+    });
+
+    csvDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      csvDropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith('.csv')) {
+        handleCsvFile(file);
+      } else {
+        alert('CSV 파일을 선택하세요.');
+      }
+    });
+
+    csvFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        handleCsvFile(file);
+      }
+    });
+
+    // CSV 파일 처리
+    async function handleCsvFile(file) {
+      const text = await file.text();
+      words = parseCSV(text);
+
+      const fileInfo = document.getElementById('fileInfo');
+      const fileInfoText = document.getElementById('fileInfoText');
+
+      fileInfo.classList.add('show');
+      fileInfoText.innerHTML = `<strong>파일명:</strong> ${file.name}<br><strong>단어 개수:</strong> ${words.length}개`;
+    }
+
+    // CSV 파싱
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      return lines.map(line => {
+        const parts = line.split(',');
+        return {
+          english: parts[0]?.trim(),
+          korean: parts[1]?.trim(),
+          partOfSpeech: parts[2]?.trim() || ''
+        };
+      }).filter(w => w.english);
+    }
+
+    // 로그 추가
+    function addLog(message, type = 'info') {
+      const logContainer = document.getElementById('logContainer');
+      const logCard = document.getElementById('logCard');
+      logCard.style.display = 'block';
+
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logContainer.appendChild(entry);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    // UI 업데이트
+    function updateUI() {
+      const { status, total, current, errors } = progress;
+
+      document.getElementById('statusBadge').className = `status-badge status-${status}`;
+      document.getElementById('statusText').textContent = `${current} / ${total}`;
+
+      const percentage = total > 0 ? Math.round((current / total) * 100) : 0;
+      document.getElementById('progressBar').style.width = percentage + '%';
+      document.getElementById('progressText').textContent = percentage + '%';
+
+      document.getElementById('currentStat').textContent = current;
+      document.getElementById('totalStat').textContent = total;
+      document.getElementById('errorStat').textContent = errors;
+
+      // 예상 시간
+      if (status === 'running' && current > 0) {
+        const elapsed = Date.now() - progress.startTime;
+        const avgTime = elapsed / current;
+        const remaining = (total - current) * avgTime;
+        document.getElementById('etaStat').textContent = formatTime(remaining);
+      }
+    }
+
+    function formatTime(ms) {
+      const seconds = Math.floor(ms / 1000);
+      const minutes = Math.floor(seconds / 60);
+      if (minutes > 0) {
+        return `${minutes}분 ${seconds % 60}초`;
+      }
+      return `${seconds}초`;
+    }
+
+    // Gemini로 강의 생성
+    async function generateLecture(word, apiKey) {
+      const prompt = `
+고등학생을 위한 영어 강의입니다. 담백하고 흥미롭게 수업하듯이 단어를 설명하세요.
+
+단어: ${word.english}
+
+**스타일:**
+- 반드시 경어체("-습니다", "-ㅂ니다") 사용
+- 목차나 번호 없이 자연스럽게 설명
+- 담백하게 사실을 전달하되 흥미롭게
+- 고등학생 수준의 이해하기 쉬운 예문 2개 포함
+- 반드시 600자 이내!
+
+**필수 포함 내용:**
+- 한글 뜻
+- 발음 (한글로)
+- 어원 (간단히)
+- 동의어/유의어 (비슷한 단어들)
+- 반의어 (반대 의미 단어)
+- 예문 2개 (한글 번역 포함)
+- 암기 팁
+`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API 오류: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text;
+    }
+
+    // Gemini TTS로 음성 생성
+    async function generateAudio(text, apiKey) {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: text }]
+          }],
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: 'Kore'
+                }
+              }
+            }
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`TTS API 오류: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const audioData = data.candidates[0].content.parts[0].inlineData.data;
+
+      // base64를 Blob으로 변환
+      const binaryString = atob(audioData);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      // PCM을 WAV로 변환
+      return convertPcmToWav(bytes);
+    }
+
+    // PCM을 WAV로 변환
+    function convertPcmToWav(pcmData) {
+      const sampleRate = 24000;
+      const numChannels = 1;
+      const bitsPerSample = 16;
+
+      const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+      const blockAlign = numChannels * bitsPerSample / 8;
+      const dataSize = pcmData.length;
+
+      const header = new ArrayBuffer(44);
+      const view = new DataView(header);
+
+      // RIFF header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeString(view, 8, 'WAVE');
+
+      // fmt sub-chunk
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitsPerSample, true);
+
+      // data sub-chunk
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      // Combine header and data
+      const wavData = new Uint8Array(44 + dataSize);
+      wavData.set(new Uint8Array(header), 0);
+      wavData.set(pcmData, 44);
+
+      return new Blob([wavData], { type: 'audio/wav' });
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    // 단어 처리
+    async function processWord(word, apiKey) {
+      const currentWordDiv = document.getElementById('currentWordDiv');
+      currentWordDiv.classList.add('show');
+      document.getElementById('currentWord').textContent = word.english;
+
+      try {
+        addLog(`처리 시작: ${word.english}`, 'info');
+
+        // 강의 생성
+        const lecture = await generateLecture(word, apiKey);
+
+        const lectureData = {
+          word: word.english,
+          korean: word.korean,
+          partOfSpeech: word.partOfSpeech,
+          lecture: lecture,
+          generatedAt: new Date().toISOString()
+        };
+
+        generatedFiles.lectures[word.english] = JSON.stringify(lectureData, null, 2);
+
+        // 음성 생성
+        const audioBlob = await generateAudio(lecture, apiKey);
+        generatedFiles.audio[word.english] = audioBlob;
+
+        addLog(`✅ 완료: ${word.english}`, 'success');
+        return { success: true };
+      } catch (error) {
+        addLog(`❌ 실패: ${word.english} - ${error.message}`, 'error');
+        progress.errors++;
+        return { success: false, error: error.message };
+      }
+    }
+
+    // 생성 시작
+    async function startGeneration() {
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const startIndex = parseInt(document.getElementById('startIndex').value) || 0;
+      const endIndex = parseInt(document.getElementById('endIndex').value) || words.length;
+
+      if (!apiKey) {
+        alert('API 키를 입력하세요');
+        return;
+      }
+
+      if (words.length === 0) {
+        alert('CSV 파일을 먼저 선택하세요');
+        return;
+      }
+
+      const targetWords = words.slice(startIndex, endIndex);
+
+      progress = {
+        status: 'running',
+        total: targetWords.length,
+        current: 0,
+        errors: 0,
+        startTime: Date.now()
+      };
+
+      generatedFiles = { lectures: {}, audio: {} };
+
+      document.getElementById('progressCard').style.display = 'block';
+      document.getElementById('startBtn').disabled = true;
+
+      addLog(`생성 시작: ${targetWords.length}개 단어`, 'info');
+
+      for (let i = 0; i < targetWords.length; i++) {
+        await processWord(targetWords[i], apiKey);
+        progress.current = i + 1;
+        updateUI();
+
+        // Rate limit 방지 (1초 대기)
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
+      progress.status = 'completed';
+      updateUI();
+
+      document.getElementById('currentWordDiv').classList.remove('show');
+      document.getElementById('downloadSection').classList.add('show');
+      document.getElementById('startBtn').disabled = false;
+
+      addLog('✅ 모든 처리 완료!', 'success');
+    }
+
+    // 모든 파일 다운로드
+    async function downloadAllFiles() {
+      const zip = new JSZip();
+
+      // 강의 JSON 추가
+      const lecturesFolder = zip.folder('lectures');
+      Object.entries(generatedFiles.lectures).forEach(([word, content]) => {
+        lecturesFolder.file(`${word}.json`, content);
+      });
+
+      // 음성 파일 추가
+      const audioFolder = zip.folder('audio');
+      Object.entries(generatedFiles.audio).forEach(([word, blob]) => {
+        audioFolder.file(`${word}.wav`, blob);
+      });
+
+      // ZIP 생성 및 다운로드
+      addLog('ZIP 파일 생성 중...', 'info');
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `aivoca-lectures-${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      addLog('✅ 다운로드 완료!', 'success');
+    }
+  </script>
+</body>
+</html>

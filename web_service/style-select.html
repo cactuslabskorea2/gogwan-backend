@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <script src="analytics.js" type="module"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스타일 선택 - GOGWAN</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .style-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: #f3f4f6;
+        }
+
+        .style-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .style-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .style-item.selected {
+            border: 3px solid #3B82F6;
+            transform: scale(1.05);
+        }
+
+        .loading-grid {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6B7280;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #E5E7EB;
+            border-top-color: #3B82F6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6B7280;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        .continue-button {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+            display: none;
+        }
+
+        .continue-button:hover {
+            background: #2563EB;
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+        }
+
+        .continue-button.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 -->
+        <div class="page-header">
+            <button class="back-button" onclick="goBack()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
+                </svg>
+            </button>
+            <h1 class="page-title">스타일 선택</h1>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- 스타일 그리드 -->
+        <div class="style-grid" id="styleGrid">
+            <div class="loading-grid">
+                <div class="loading-spinner"></div>
+                <p>스타일 불러오는 중...</p>
+            </div>
+        </div>
+
+        <!-- 계속하기 버튼 -->
+        <button class="continue-button" id="continueBtn" onclick="continueWithStyle()">
+            선택한 스타일로 계속하기
+        </button>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-i5QR-MFeCLQtSMlIqXUhVuIzkJQBRhA",
+            authDomain: "gogwan-e79bc.firebaseapp.com",
+            projectId: "gogwan-e79bc",
+            storageBucket: "gogwan-e79bc.firebasestorage.app",
+            messagingSenderId: "241129624672",
+            appId: "1:241129624672:web:920301c7f196322c761f05"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let selectedStyle = null;
+
+        // 스타일 목록 불러오기
+        async function loadStyles() {
+            const gridDiv = document.getElementById('styleGrid');
+            const continueBtn = document.getElementById('continueBtn');
+
+            try {
+                const querySnapshot = await getDocs(collection(db, 'ai_styles'));
+
+                if (querySnapshot.empty) {
+                    gridDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎨</div>
+                            <h3 style="font-size: 24px; margin-bottom: 12px;">아직 등록된 스타일이 없습니다</h3>
+                            <p style="color: #9CA3AF; font-size: 14px;">관리자가 곧 멋진 스타일을 추가할 예정입니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const styles = [];
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    console.log('스타일 체크:', {
+                        id: doc.id,
+                        name: data.styleName,
+                        isPublic: data.isPublic,
+                        type: typeof data.isPublic,
+                        willShow: data.isPublic !== false
+                    });
+                    // 공개된 스타일만 추가 (isPublic이 명시적으로 false가 아닌 경우)
+                    if (data.isPublic !== false) {
+                        styles.push({ id: doc.id, ...data });
+                    }
+                });
+
+                // 공개된 스타일이 없으면 안내 메시지 표시
+                if (styles.length === 0) {
+                    gridDiv.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🎨</div>
+                            <h3 style="font-size: 24px; margin-bottom: 12px;">아직 공개된 스타일이 없습니다</h3>
+                            <p style="color: #9CA3AF; font-size: 14px;">관리자가 곧 멋진 스타일을 추가할 예정입니다.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                gridDiv.innerHTML = styles.map(style => `
+                    <div class="style-item" data-style-id="${style.id}" onclick="selectStyle('${style.id}', '${style.styleId}', '${style.styleName}', '${style.styleType}', this)">
+                        <img src="${style.imageUrl}" alt="${style.styleName}">
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: 12px 8px 8px; color: white; font-size: 14px; font-weight: 600; text-align: center;">
+                            ${style.styleName}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                gridDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3 style="font-size: 24px; margin-bottom: 12px;">스타일 불러오기 실패</h3>
+                        <p style="color: #9CA3AF; font-size: 14px;">${error.message}</p>
+                    </div>
+                `;
+                console.error('Error:', error);
+            }
+        }
+
+        window.selectStyle = function(id, styleId, styleName, styleType, element) {
+            selectedStyle = { id, styleId, styleName, styleType };
+
+            // 선택 상태 업데이트
+            document.querySelectorAll('.style-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            // 계속하기 버튼 표시
+            document.getElementById('continueBtn').classList.add('show');
+        };
+
+        window.continueWithStyle = function() {
+            if (!selectedStyle) {
+                alert('스타일을 먼저 선택해주세요.');
+                return;
+            }
+
+            // 선택된 스타일 정보를 sessionStorage에 저장
+            sessionStorage.setItem('selectedStyle', JSON.stringify(selectedStyle));
+
+            // 이미지 변환 페이지로 이동
+            window.location.href = 'style-transform.html';
+        };
+
+        window.goBack = function() {
+            window.location.href = 'ai-image.html';
+        };
+
+        // 초기 로드
+        loadStyles();
+    </script>
+</body>
+</html>
