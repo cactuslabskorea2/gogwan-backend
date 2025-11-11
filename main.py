@@ -2513,6 +2513,129 @@ async def get_solution(problem_id: str):
         raise HTTPException(status_code=500, detail=f"해설 조회 중 오류: {str(e)}")
 
 
+# ============================================
+# Bible App Analytics API
+# ============================================
+
+class BibleAnalyticsData(BaseModel):
+    userId: str
+    lastActiveDate: str
+    totalDaysActive: int
+    totalSessions: int
+    firstInstallDate: str
+    dailyActivityLog: dict
+    versesSaved: int
+    chaptersRead: int
+    totalReadingTimeSeconds: int
+    appVersion: str = "1.0.0"
+    platform: str = "flutter"
+    syncedAt: str = None
+
+@app.post("/api/bible-analytics")
+async def receive_bible_analytics(data: BibleAnalyticsData):
+    """
+    Bible 앱에서 보낸 analytics 데이터를 저장
+    """
+    try:
+        # Firestore에 저장
+        bible_db = firestore.Client(project='gogwan-4902b')  # Bible 앱용 프로젝트
+
+        analytics_ref = bible_db.collection('bible_analytics').document(data.userId)
+
+        analytics_ref.set({
+            'userId': data.userId,
+            'lastActiveDate': data.lastActiveDate,
+            'totalDaysActive': data.totalDaysActive,
+            'totalSessions': data.totalSessions,
+            'firstInstallDate': data.firstInstallDate,
+            'dailyActivityLog': data.dailyActivityLog,
+            'versesSaved': data.versesSaved,
+            'chaptersRead': data.chaptersRead,
+            'totalReadingTimeSeconds': data.totalReadingTimeSeconds,
+            'appVersion': data.appVersion,
+            'platform': data.platform,
+            'lastSyncedAt': firestore.SERVER_TIMESTAMP
+        }, merge=True)
+
+        return {
+            "success": True,
+            "message": "Analytics data saved successfully",
+            "userId": data.userId
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error saving analytics: {str(e)}")
+
+@app.get("/api/bible-analytics/stats")
+async def get_bible_analytics_stats():
+    """
+    Bible 앱의 전체 통계 조회
+    """
+    try:
+        bible_db = firestore.Client(project='gogwan-4902b')
+        analytics_ref = bible_db.collection('bible_analytics')
+
+        # 전체 사용자 데이터 가져오기
+        users = []
+        for doc in analytics_ref.stream():
+            user_data = doc.to_dict()
+            users.append(user_data)
+
+        if not users:
+            return {
+                "totalUsers": 0,
+                "dau": 0,
+                "mau": 0,
+                "avgStreak": 0,
+                "totalVersesSaved": 0,
+                "totalChaptersRead": 0,
+                "avgReadingTime": 0,
+                "avgEngagement": 0
+            }
+
+        # 통계 계산
+        from datetime import datetime, timedelta
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+        last_30_days = today - timedelta(days=30)
+
+        dau = 0  # Daily Active Users
+        mau = 0  # Monthly Active Users
+        total_verses_saved = 0
+        total_chapters_read = 0
+        total_reading_time = 0
+
+        for user in users:
+            # DAU 계산 (오늘 활동한 사용자)
+            last_active = datetime.fromisoformat(user.get('lastActiveDate', '')).date()
+            if last_active == today or last_active == yesterday:
+                dau += 1
+
+            # MAU 계산 (최근 30일 활동)
+            if last_active >= last_30_days:
+                mau += 1
+
+            total_verses_saved += user.get('versesSaved', 0)
+            total_chapters_read += user.get('chaptersRead', 0)
+            total_reading_time += user.get('totalReadingTimeSeconds', 0)
+
+        avg_reading_time = total_reading_time / len(users) / 60 if users else 0  # minutes
+
+        return {
+            "totalUsers": len(users),
+            "dau": dau,
+            "mau": mau,
+            "avgStreak": 0,  # TODO: Calculate average streak
+            "totalVersesSaved": total_verses_saved,
+            "totalChaptersRead": total_chapters_read,
+            "avgReadingTime": round(avg_reading_time, 1),
+            "avgEngagement": 0,  # TODO: Calculate engagement
+            "users": users[:100]  # Return top 100 users
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching analytics: {str(e)}")
+
 # 정적 파일 서빙 (web_service 폴더)
 app.mount("/", StaticFiles(directory="web_service", html=True), name="static")
 
