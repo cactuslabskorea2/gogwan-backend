@@ -95,8 +95,12 @@ def get_firestore_client():
     global db
     if db is None:
         import os
-        cred_path = os.path.join(os.path.dirname(__file__), 'gogwan-4902b9a702be.json')
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cred_path
+        # Cloud Run 환경에서는 GOOGLE_APPLICATION_CREDENTIALS가 이미 설정되어 있거나 ADC 사용
+        # 로컬 환경에서만 명시적으로 파일 경로 설정
+        if not is_cloud_run and not os.getenv('GOOGLE_APPLICATION_CREDENTIALS') and not os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON'):
+            cred_path = os.path.join(os.path.dirname(__file__), 'gogwan-4902b9a702be.json')
+            if os.path.exists(cred_path):
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cred_path
         # Use gogwan-e79bc project (matches google-services.json in frontend)
         # Even though service account is from 'gogwan' project, it should work cross-project
         db = firestore.Client(project='gogwan-e79bc')
