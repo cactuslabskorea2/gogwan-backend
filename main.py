@@ -101,9 +101,8 @@ def get_firestore_client():
             cred_path = os.path.join(os.path.dirname(__file__), 'gogwan-4902b9a702be.json')
             if os.path.exists(cred_path):
                 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cred_path
-        # Use gogwan-e79bc project (matches google-services.json in frontend)
-        # Even though service account is from 'gogwan' project, it should work cross-project
-        db = firestore.Client(project='gogwan-e79bc')
+        # Use gogwan project (service account has permissions here)
+        db = firestore.Client(project='gogwan')
     return db
 
 
