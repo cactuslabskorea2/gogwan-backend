@@ -1,7 +1,9 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 import base64
 import os
 import glob
@@ -18,6 +20,31 @@ import json
 from google.cloud import firestore
 
 app = FastAPI(title="GOGWAN API")
+
+# CSP 미들웨어 추가
+class CSPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        # HTML 파일에만 CSP 헤더 추가
+        if response.headers.get("content-type", "").startswith("text/html"):
+            csp_policy = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.gstatic.com https://*.firebaseio.com https://cdn.jsdelivr.net https://generativelanguage.googleapis.com https://*.googleapis.com; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "img-src 'self' data: blob: https://*.googleusercontent.com https://firebasestorage.googleapis.com https://*.firebaseapp.com; "
+                "font-src 'self' data: https://fonts.gstatic.com; "
+                "connect-src 'self' "
+                "https://generativelanguage.googleapis.com "
+                "https://firestore.googleapis.com "
+                "https://*.googleapis.com "
+                "https://*.firebaseio.com "
+                "https://www.gstatic.com "
+                "https://*.run.app;"
+            )
+            response.headers["Content-Security-Policy"] = csp_policy
+        return response
+
+app.add_middleware(CSPMiddleware)
 
 # 스타일 설명 캐시 (메모리에 저장)
 style_descriptions = {}
@@ -1527,6 +1554,38 @@ Transform this image into a perfect recreation in the described artistic style w
             )
         )
 
+        # 응답 검증
+        if not response or not response.candidates:
+            raise HTTPException(
+                status_code=500,
+                detail="Gemini API에서 응답을 받지 못했습니다. 이미지가 정책을 위반했거나 서버 오류가 발생했을 수 있습니다."
+            )
+
+        # 안전 필터 확인
+        candidate = response.candidates[0]
+        if hasattr(candidate, 'finish_reason') and candidate.finish_reason:
+            finish_reason = str(candidate.finish_reason)
+            if 'SAFETY' in finish_reason:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"안전 필터에 의해 차단되었습니다: {finish_reason}"
+                )
+            elif finish_reason not in ['STOP', 'FINISH_REASON_STOP']:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"생성 중단됨: {finish_reason}"
+                )
+
+        if not candidate.content or not candidate.content.parts:
+            # 디버깅을 위한 상세 정보
+            error_detail = "생성된 콘텐츠가 없습니다."
+            if hasattr(candidate, 'finish_reason'):
+                error_detail += f" (finish_reason: {candidate.finish_reason})"
+            raise HTTPException(
+                status_code=500,
+                detail=error_detail
+            )
+
         # 생성된 이미지 추출
         for part in response.candidates[0].content.parts:
             if part.inline_data is not None:
@@ -2537,10 +2596,9 @@ async def receive_bible_analytics(data: BibleAnalyticsData):
     Bible 앱에서 보낸 analytics 데이터를 저장
     """
     try:
-        # Firestore에 저장
-        bible_db = firestore.Client(project='gogwan-4902b')  # Bible 앱용 프로젝트
-
-        analytics_ref = bible_db.collection('bible_analytics').document(data.userId)
+        # Firestore에 저장 - gogwan 프로젝트의 별도 컬렉션에 저장
+        db_client = get_firestore_client()
+        analytics_ref = db_client.collection('bible_analytics').document(data.userId)
 
         analytics_ref.set({
             'userId': data.userId,
@@ -2572,8 +2630,9 @@ async def get_bible_analytics_stats():
     Bible 앱의 전체 통계 조회
     """
     try:
-        bible_db = firestore.Client(project='gogwan-4902b')
-        analytics_ref = bible_db.collection('bible_analytics')
+        # gogwan 프로젝트의 Firestore 사용
+        db_client = get_firestore_client()
+        analytics_ref = db_client.collection('bible_analytics')
 
         # 전체 사용자 데이터 가져오기
         users = []
@@ -2635,6 +2694,389 @@ async def get_bible_analytics_stats():
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching analytics: {str(e)}")
+
+# ===== 게시판 API =====
+class BoardPost(BaseModel):
+    title: str
+    content: str
+    author: str
+    password: str
+    category: str = "자유게시판"
+
+class BoardPostUpdate(BaseModel):
+    title: str
+    content: str
+    password: str
+
+class BoardComment(BaseModel):
+    content: str
+    author: str
+    password: str
+
+class BoardCommentUpdate(BaseModel):
+    content: str
+    password: str
+
+class PasswordVerify(BaseModel):
+    password: str
+
+@app.get("/api/board/posts")
+async def get_board_posts(category: str = "자유게시판", limit: int = 50, offset: int = 0):
+    """
+    게시판 글 목록 조회
+    """
+    try:
+        db_client = get_firestore_client()
+        posts_ref = db_client.collection('board_posts')
+
+        # 카테고리 필터링 및 최신순 정렬
+        query = posts_ref.where('category', '==', category).order_by('createdAt', direction=firestore.Query.DESCENDING).limit(limit)
+
+        posts = []
+        for doc in query.stream():
+            post_data = doc.to_dict()
+            post_data['id'] = doc.id
+            posts.append(post_data)
+
+        return {
+            "success": True,
+            "posts": posts,
+            "total": len(posts)
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching posts: {str(e)}")
+
+@app.get("/api/board/posts/{post_id}")
+async def get_board_post(post_id: str):
+    """
+    게시글 상세 조회
+    """
+    try:
+        db_client = get_firestore_client()
+        post_ref = db_client.collection('board_posts').document(post_id)
+        post_doc = post_ref.get()
+
+        if not post_doc.exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        post_data = post_doc.to_dict()
+        post_data['id'] = post_doc.id
+
+        # 조회수 증가
+        post_ref.update({
+            'views': firestore.Increment(1)
+        })
+        post_data['views'] = post_data.get('views', 0) + 1
+
+        return {
+            "success": True,
+            "post": post_data
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching post: {str(e)}")
+
+@app.post("/api/board/posts")
+async def create_board_post(post: BoardPost):
+    """
+    게시글 작성
+    """
+    try:
+        db_client = get_firestore_client()
+        posts_ref = db_client.collection('board_posts')
+
+        # 비밀번호 해싱 (간단한 해시 사용)
+        import hashlib
+        password_hash = hashlib.sha256(post.password.encode()).hexdigest()
+
+        post_data = {
+            'title': post.title,
+            'content': post.content,
+            'author': post.author,
+            'password': password_hash,
+            'category': post.category,
+            'createdAt': firestore.SERVER_TIMESTAMP,
+            'updatedAt': firestore.SERVER_TIMESTAMP,
+            'views': 0,
+            'likes': 0
+        }
+
+        doc_ref = posts_ref.add(post_data)
+        post_id = doc_ref[1].id
+
+        return {
+            "success": True,
+            "message": "Post created successfully",
+            "postId": post_id
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating post: {str(e)}")
+
+@app.put("/api/board/posts/{post_id}")
+async def update_board_post(post_id: str, post: BoardPostUpdate):
+    """
+    게시글 수정
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+        post_ref = db_client.collection('board_posts').document(post_id)
+        post_doc = post_ref.get()
+
+        if not post_doc.exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # 비밀번호 검증
+        stored_password = post_doc.to_dict().get('password')
+        password_hash = hashlib.sha256(post.password.encode()).hexdigest()
+
+        if stored_password != password_hash:
+            raise HTTPException(status_code=403, detail="Invalid password")
+
+        post_ref.update({
+            'title': post.title,
+            'content': post.content,
+            'updatedAt': firestore.SERVER_TIMESTAMP
+        })
+
+        return {
+            "success": True,
+            "message": "Post updated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating post: {str(e)}")
+
+@app.post("/api/board/posts/{post_id}/verify")
+async def verify_post_password(post_id: str, verify: PasswordVerify):
+    """
+    게시글 비밀번호 검증
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+        post_ref = db_client.collection('board_posts').document(post_id)
+        post_doc = post_ref.get()
+
+        if not post_doc.exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        stored_password = post_doc.to_dict().get('password')
+        password_hash = hashlib.sha256(verify.password.encode()).hexdigest()
+
+        return {
+            "success": True,
+            "valid": stored_password == password_hash
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error verifying password: {str(e)}")
+
+@app.delete("/api/board/posts/{post_id}")
+async def delete_board_post(post_id: str, verify: PasswordVerify):
+    """
+    게시글 삭제
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+        post_ref = db_client.collection('board_posts').document(post_id)
+        post_doc = post_ref.get()
+
+        if not post_doc.exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        # 비밀번호 검증
+        stored_password = post_doc.to_dict().get('password')
+        password_hash = hashlib.sha256(verify.password.encode()).hexdigest()
+
+        if stored_password != password_hash:
+            raise HTTPException(status_code=403, detail="Invalid password")
+
+        post_ref.delete()
+
+        return {
+            "success": True,
+            "message": "Post deleted successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting post: {str(e)}")
+
+@app.post("/api/board/posts/{post_id}/like")
+async def like_board_post(post_id: str):
+    """
+    게시글 좋아요
+    """
+    try:
+        db_client = get_firestore_client()
+        post_ref = db_client.collection('board_posts').document(post_id)
+
+        if not post_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        post_ref.update({
+            'likes': firestore.Increment(1)
+        })
+
+        # 업데이트된 좋아요 수 가져오기
+        updated_post = post_ref.get().to_dict()
+
+        return {
+            "success": True,
+            "likes": updated_post.get('likes', 1)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error liking post: {str(e)}")
+
+# ===== 댓글 API =====
+@app.get("/api/board/posts/{post_id}/comments")
+async def get_comments(post_id: str):
+    """
+    댓글 목록 조회
+    """
+    try:
+        db_client = get_firestore_client()
+        comments_ref = db_client.collection('board_posts').document(post_id).collection('comments')
+
+        query = comments_ref.order_by('createdAt', direction=firestore.Query.ASCENDING)
+
+        comments = []
+        for doc in query.stream():
+            comment_data = doc.to_dict()
+            comment_data['id'] = doc.id
+            # 비밀번호는 클라이언트에 전송하지 않음
+            comment_data.pop('password', None)
+            comments.append(comment_data)
+
+        return {
+            "success": True,
+            "comments": comments
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching comments: {str(e)}")
+
+@app.post("/api/board/posts/{post_id}/comments")
+async def create_comment(post_id: str, comment: BoardComment):
+    """
+    댓글 작성
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+
+        # 게시글 존재 확인
+        post_ref = db_client.collection('board_posts').document(post_id)
+        if not post_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Post not found")
+
+        comments_ref = post_ref.collection('comments')
+        password_hash = hashlib.sha256(comment.password.encode()).hexdigest()
+
+        comment_data = {
+            'content': comment.content,
+            'author': comment.author,
+            'password': password_hash,
+            'createdAt': firestore.SERVER_TIMESTAMP,
+            'updatedAt': firestore.SERVER_TIMESTAMP
+        }
+
+        doc_ref = comments_ref.add(comment_data)
+        comment_id = doc_ref[1].id
+
+        return {
+            "success": True,
+            "message": "Comment created successfully",
+            "commentId": comment_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error creating comment: {str(e)}")
+
+@app.put("/api/board/posts/{post_id}/comments/{comment_id}")
+async def update_comment(post_id: str, comment_id: str, comment: BoardCommentUpdate):
+    """
+    댓글 수정
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+        comment_ref = db_client.collection('board_posts').document(post_id).collection('comments').document(comment_id)
+        comment_doc = comment_ref.get()
+
+        if not comment_doc.exists:
+            raise HTTPException(status_code=404, detail="Comment not found")
+
+        # 비밀번호 검증
+        stored_password = comment_doc.to_dict().get('password')
+        password_hash = hashlib.sha256(comment.password.encode()).hexdigest()
+
+        if stored_password != password_hash:
+            raise HTTPException(status_code=403, detail="Invalid password")
+
+        comment_ref.update({
+            'content': comment.content,
+            'updatedAt': firestore.SERVER_TIMESTAMP
+        })
+
+        return {
+            "success": True,
+            "message": "Comment updated successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error updating comment: {str(e)}")
+
+@app.delete("/api/board/posts/{post_id}/comments/{comment_id}")
+async def delete_comment(post_id: str, comment_id: str, verify: PasswordVerify):
+    """
+    댓글 삭제
+    """
+    try:
+        import hashlib
+        db_client = get_firestore_client()
+        comment_ref = db_client.collection('board_posts').document(post_id).collection('comments').document(comment_id)
+        comment_doc = comment_ref.get()
+
+        if not comment_doc.exists:
+            raise HTTPException(status_code=404, detail="Comment not found")
+
+        # 비밀번호 검증
+        stored_password = comment_doc.to_dict().get('password')
+        password_hash = hashlib.sha256(verify.password.encode()).hexdigest()
+
+        if stored_password != password_hash:
+            raise HTTPException(status_code=403, detail="Invalid password")
+
+        comment_ref.delete()
+
+        return {
+            "success": True,
+            "message": "Comment deleted successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting comment: {str(e)}")
 
 # 정적 파일 서빙 (web_service 폴더)
 app.mount("/", StaticFiles(directory="web_service", html=True), name="static")
